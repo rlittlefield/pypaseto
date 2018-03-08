@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 from codecs import open
 from os import path
 
@@ -9,12 +9,12 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='pypast',
-    version='0.0.1',
-    description='Platform-Agnostic Security Tokens for Python',
+    name='paseto',
+    version='0.0.2',
+    description='Platform-Agnostic Security Tokens for Python (PASETO)',
     long_description=long_description,
-    url='https://github.com/JimDabell/pypast',
-    author='Jim Dabell',
+    url='https://github.com/rlittlefield/pypaseto',
+    author='J. Ryan Littlefield',
     classifiers=[
         'Development Status :: 1 - Planning',
         'Intended Audience :: Developers',
@@ -22,6 +22,6 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     keywords='past security stateless tokens',
-	py_modules=["pypast"],
-    install_requires=['libnacl>=1.6.1'],
+    py_modules=["paseto"],
+    install_requires=['pysodium'],
 )

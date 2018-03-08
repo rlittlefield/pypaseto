@@ -1,0 +1,48 @@
+Please feel free to make pull/merge requests to this project!
+
+Guidelines are pretty simple:
+
+1. Make sure tests still pass! You should be able to install pytest and run
+the `pytest` command. If pysodium is upset about libsodium not being installed,
+you will have to install it separately.
+
+2. Add new tests to cover any new functionality or bugfixes.
+
+3. There is a DCO (Developer Certificate of Origin) policy. This just means
+you need to read the DCO below and sign off on your commits by adding the
+--signoff flag to your git commit command, or otherwise put a line in your
+commit message like this:
+
+"Signed-off-by: Your Name <your email>"
+
+4. Issue a pull request in github. Ideally squash your commits and make sure
+things are up to date with the master branch in advance.
+
+5. Be helpful with any questions/concerns/discussion about your contribution.
+
+
+Developer's Certificate of Origin 1.1
+
+        By making a contribution to this project, I certify that:
+
+        (a) The contribution was created in whole or in part by me and I
+            have the right to submit it under the open source license
+            indicated in the file; or
+
+        (b) The contribution is based upon previous work that, to the best
+            of my knowledge, is covered under an appropriate open source
+            license and I have the right under that license to submit that
+            work with modifications, whether created in whole or in part
+            by me, under the same open source license (unless I am
+            permitted to submit under a different license), as indicated
+            in the file; or
+
+        (c) The contribution was provided directly to me by some other
+            person who certified (a), (b) or (c) and I have not modified
+            it.
+
+        (d) I understand and agree that this project and the contribution
+            are public and that a record of the contribution (including all
+            personal information I submit with it, including my sign-off) is
+            maintained indefinitely and may be redistributed consistent with
+            this project or the open source license(s) involved.
