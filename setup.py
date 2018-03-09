@@ -10,9 +10,10 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='paseto',
-    version='0.0.2',
+    version='0.0.3',
     description='Platform-Agnostic Security Tokens for Python (PASETO)',
     long_description=long_description,
+    license='MIT',
     url='https://github.com/rlittlefield/pypaseto',
     author='J. Ryan Littlefield',
     classifiers=[
@@ -24,4 +25,5 @@ setup(
     keywords='past security stateless tokens',
     py_modules=["paseto"],
     install_requires=['pysodium'],
+    data_files=[("", ["LICENSE"])],
 )
