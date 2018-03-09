@@ -33,7 +33,7 @@ class PasetoV2:
     header = b'v2.local.'
 
     @classmethod
-    def encrypt(cls, plaintext, key, footer='', nonce_for_unit_testing=''):
+    def encrypt(cls, plaintext: bytes, key: bytes, footer=b'', nonce_for_unit_testing='') -> bytes:
         if nonce_for_unit_testing:
             nonce = nonce_for_unit_testing
         else:
@@ -55,7 +55,7 @@ class PasetoV2:
         return token
 
     @classmethod
-    def decrypt(cls, token, key):
+    def decrypt(cls, token: bytes, key: bytes) -> dict:
         parts = token.split(b'.')
         footer = b''
         if len(parts) == 4:
