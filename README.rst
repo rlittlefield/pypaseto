@@ -1,5 +1,12 @@
 Platform-Agnostic Security Tokens for Python
 ============================================
+.. image:: https://img.shields.io/pypi/v/paseto.svg
+   :alt: PyPI
+   :target: https://pypi.python.org/pypi/paseto
+.. image:: https://img.shields.io/pypi/l/paseto.svg
+   :alt: PyPI - License
+   :target: https://pypi.python.org/pypi/paseto
+
 
 This is an unofficial initial implementation of
 `PASETO: Platform-Agnostic Security Tokens <https://github.com/paragonie/past/>`_ for Python.
