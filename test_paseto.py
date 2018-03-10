@@ -110,3 +110,19 @@ def test_encrypt(token):
     assert decrypted['message'] == token['message']
     if decrypted['footer']:
         assert decrypted['footer']== token['footer']
+
+def test_encrypt_with_footer_not_set():
+    message = b'Love is stronger than hate or fear'
+    raw_token = b'v2.local.BEsKs5AolRYDb_O-bO-lwHWUextpShFSXlvv8MsrNZs3vTSnGQG4qRM9ezDl880jFwknSA6JARj2qKhDHnlSHx1GSCizfcF019U'
+    output_token = paseto.PasetoV2.encrypt(
+        plaintext=message,
+        key=sym_key,
+        nonce_for_unit_testing=nonce
+    )
+    assert raw_token == token['raw']
+
+    decrypted = paseto.PasetoV2.decrypt(
+        token=raw_token,
+        key=sym_key,
+    )
+    assert decrypted['message'] == message
