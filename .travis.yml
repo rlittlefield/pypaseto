@@ -1,0 +1,10 @@
+language: python
+python:
+  - "3.6"
+  - "3.7-dev"  # 3.7 development branch
+install:
+  - wget https://download.libsodium.org/libsodium/releases/LATEST.tar.gz && tar xzf LATEST.tar.gz && pushd libsodium-stable/ && ./configure --prefix=/usr && make && make check && sudo make install && popd
+  - pip install -r requirements.txt
+script:
+  - pytest
+

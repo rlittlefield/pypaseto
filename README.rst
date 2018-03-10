@@ -8,6 +8,9 @@ Platform-Agnostic Security Tokens for Python
    :target: https://pypi.python.org/pypi/paseto
 
 
+.. image:: https://travis-ci.org/rlittlefield/pypaseto.svg?branch=master
+    :target: https://travis-ci.org/rlittlefield/pypaseto
+
 This is an unofficial initial implementation of
 `PASETO: Platform-Agnostic Security Tokens <https://github.com/paragonie/past/>`_ for Python.
 
