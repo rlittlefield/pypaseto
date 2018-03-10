@@ -6,7 +6,12 @@ null_key = b'\0'*32
 full_key = b'\xff'*32
 nonce = b'\0'*24
 nonce2 = bytes.fromhex('45742c976d684ff84ebdc0de59809a97cda2f64c84fda19b')
-
+private_key = bytes.fromhex(
+    'b4cbfb43df4ce210727d953e4a713307fa19bb7d9f85041438d9e11b942a37741'
+    'eb9dbbbbc047c03fd70604e0071f0987e16b28b757225c11f00415d0e20b1a2')
+public_key = bytes.fromhex(
+    '1eb9dbbbbc047c03fd70604e0071f0987e16b28b757225c11f00415d0e20b1a2'
+)
 
 @pytest.mark.parametrize("token", [
     {
@@ -127,3 +132,47 @@ def test_encrypt_with_footer_not_set():
         key=sym_key,
     )
     assert decrypted['message'] == message
+
+
+@pytest.mark.parametrize("token", [
+    {
+        'raw': b'v2.public.xnHHprS7sEyjP5vWpOvHjAP2f0HER7SWfPuehZ8QIctJRPTrlZLtRCk9_iNdugsrqJoGaO4k9cDBq3TOXu24AA',
+        'message': b'',
+        'key': private_key,
+        'footer': b''
+    },
+    {
+        'raw': b'v2.public.Qf-w0RdU2SDGW_awMwbfC0Alf_nd3ibUdY3HigzU7tn_4MPMYIKAJk_J_yKYltxrGlxEdrWIqyfjW81njtRyDw.Q3VvbiBBbHBpbnVz',
+        'message': b'',
+        'key': private_key,
+        'footer': b'Cuon Alpinus'
+    },
+    {
+        'raw': b'v2.public.RnJhbmsgRGVuaXMgcm9ja3NBeHgns4TLYAoyD1OPHww0qfxHdTdzkKcyaE4_fBF2WuY1JNRW_yI8qRhZmNTaO19zRhki6YWRaKKlCZNCNrQM',
+        'message': b'Frank Denis rocks',
+        'key': private_key,
+        'footer': b''
+    },
+    {
+        'raw': b'v2.public.RnJhbmsgRGVuaXMgcm9ja3qIOKf8zCok6-B5cmV3NmGJCD6y3J8fmbFY9KHau6-e9qUICrGlWX8zLo-EqzBFIT36WovQvbQZq4j6DcVfKCML',
+        'message': b'Frank Denis rockz',
+        'key': private_key,
+        'footer': b''
+    },
+    {
+        'raw': b'v2.public.RnJhbmsgRGVuaXMgcm9ja3O7MPuu90WKNyvBUUhAGFmi4PiPOr2bN2ytUSU-QWlj8eNefki2MubssfN1b8figynnY0WusRPwIQ-o0HSZOS0F.Q3VvbiBBbHBpbnVz',
+        'message': b'Frank Denis rocks',
+        'key': private_key,
+        'footer': b'Cuon Alpinus'
+    }
+])
+def test_sign(token):
+    result = paseto.PasetoV2.sign(
+        token['message'],
+        token['key'],
+        token['footer']
+    )
+    assert result == token['raw']
+    verify = paseto.PasetoV2.verify(result, public_key)
+    assert verify['message'] == token['message']
+    assert verify['footer'] == token['footer']
