@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='paseto',
-    version='0.0.3',
+    version='0.0.4',
     description='Platform-Agnostic Security Tokens for Python (PASETO)',
     long_description=long_description,
     license='MIT',

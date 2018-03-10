@@ -49,14 +49,39 @@ yourself, as well as checking expiration.
 	my_key = secrets.token_bytes(32)
 	# > b'M\xd48b\xe2\x9f\x1e\x01[T\xeaA1{Y\xd1y\xfdx\xb5\xb7\xbedi\xa3\x96!`\x88\xc2n\xaf'
 	token = PasetoV2.encrypt(
-        plaintext=b'plaintext is a bytes object that is encrypted',
-        key=my_key,
-        footer=b'footer is authenticated but not encrypted'
-    )
-    # > b'v2.local.ORiY6F6_uy391wB1my1LA9ANYgh7rih1bcAqswLqmuiKVaZmfmUfxB5off7gLwdHVwxc-QKIEAfEdzRNU5pHcrnefFO_aA4QQV15i_yKLyyOF9oURg.Zm9vdGVyIGlzIGF1dGhlbnRpY2F0ZWQgYnV0IG5vdCBlbmNyeXB0ZWQ'
+	    plaintext=b'plaintext is a bytes object that is encrypted',
+	    key=my_key,
+	    footer=b'footer is authenticated but not encrypted'
+	)
+	# > b'v2.local.ORiY6F6_uy391wB1my1LA9ANYgh7rih1bcAqswLqmuiKVaZmfmUfxB5off7gLwdHVwxc-QKIEAfEdzRNU5pHcrnefFO_aA4QQV15i_yKLyyOF9oURg.Zm9vdGVyIGlzIGF1dGhlbnRpY2F0ZWQgYnV0IG5vdCBlbmNyeXB0ZWQ'
 
 	parsed = PasetoV2.decrypt(
 		token, my_key
+	)
+	print(parsed['message'])
+	print(parsed['footer'])
+
+
+You can also make and verify v2.public tokens, which are signed but not
+encrypted:
+
+.. code-block:: python
+
+	from paseto import PasetoV2
+	import pysodium
+	pubkey, privkey = pysodium.crypto_sign_keypair()
+	# pubkey > b'\xa7\x0b\x14\xec\x03\x97\x90\x86\x14\x12\xa0x:)\x97\xed\xdf\x81\xc3\xe4\x95\xd7R\xfe\x9bT\xba,\x92\x0c\xb9P'
+	# privkey > b'@\x1fg\x9b\x83b$\xcdJP{\x93\xe8[\xae\x05.\xe9\xcb\x13\xe7`v\xa67\xd6\xb47\x7f\x96\xdf0\xa7\x0b\x14\xec\x03\x97\x90\x86\x14\x12\xa0x:)\x97\xed\xdf\x81\xc3\xe4\x95\xd7R\xfe\x9bT\xba,\x92\x0c\xb9P'
+
+	token = PasetoV2.sign(
+		data=b'this is a message to be signed',
+		key=privkey,
+		footer=b'footer is also signed'
+	)
+	# > b'v2.public.dGhpcyBpcyBhIG1lc3NhZ2UgdG8gYmUgc2lnbmVkNfEoMB9jj2tDnM0VzIRux02fx_eTtEmWNEWYlRxyClYN8sWeagp8H04P7I3rWjhrfVGMoNzKRELW6NYnATlECg.Zm9vdGVyIGlzIGFsc28gc2lnbmVk'
+
+	parsed = PasetoV2.verify(
+		token, pubkey
 	)
 	print(parsed['message'])
 	print(parsed['footer'])
