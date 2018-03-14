@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='paseto',
-    version='0.0.4',
+    version='0.0.5',
     description='Platform-Agnostic Security Tokens for Python (PASETO)',
     long_description=long_description,
     license='MIT',
@@ -24,6 +24,6 @@ setup(
     ],
     keywords='past security stateless tokens',
     py_modules=["paseto"],
-    install_requires=['pysodium'],
+    install_requires=['pysodium', 'pendulum'],
     data_files=[("", ["LICENSE"])],
 )

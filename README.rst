@@ -39,27 +39,33 @@ It currently only supports basic encrypt/decrypt of the "local" token type, V2.
 V1 is not as nice as V2, but we will accept a functional, clean, secure pull
 request for a V1 if you are interested.
 
-No claims are processed yet. This means you have to implement json encode/decode
-yourself, as well as checking expiration.
+To create/parse paseto tokens, use the create/parse functions. These will
+automatically handle encoding/decoding the JSON payload for you, and validate
+claims (currently just the 'exp' expiration registered claim).
+
 
 .. code-block:: python
 
-	from paseto import PasetoV2
+	import paseto
 	import secrets
 	my_key = secrets.token_bytes(32)
 	# > b'M\xd48b\xe2\x9f\x1e\x01[T\xeaA1{Y\xd1y\xfdx\xb5\xb7\xbedi\xa3\x96!`\x88\xc2n\xaf'
-	token = PasetoV2.encrypt(
-	    plaintext=b'plaintext is a bytes object that is encrypted',
-	    key=my_key,
-	    footer=b'footer is authenticated but not encrypted'
-	)
-	# > b'v2.local.ORiY6F6_uy391wB1my1LA9ANYgh7rih1bcAqswLqmuiKVaZmfmUfxB5off7gLwdHVwxc-QKIEAfEdzRNU5pHcrnefFO_aA4QQV15i_yKLyyOF9oURg.Zm9vdGVyIGlzIGF1dGhlbnRpY2F0ZWQgYnV0IG5vdCBlbmNyeXB0ZWQ'
 
-	parsed = PasetoV2.decrypt(
-		token, my_key
+	# create a paseto token that expires in 5 minutes (300 seconds)
+	token = paseto.create(
+		key=my_key,
+		purpose='local',
+		claims={'my claims': [1, 2, 3]},
+		exp_seconds=300
+	)
+	# > b'v2.local.g7qPkRXfUVSxx3jDw6qbAVDvehtz_mwawYsCd5IQ7VmxuRFIHxY9djMaR8M7LWvCSvCZu8NUk-Ta8zFC5MpUXldBCKq8NtCG31wsoKv8zCKwDs9LuWy4NX3Te6rvlnjDMcI_Iw'
+
+	parsed = paseto.parse(
+		key=my_key,
+		purpose='local',
+		token=token,
 	)
 	print(parsed['message'])
-	print(parsed['footer'])
 
 
 You can also make and verify v2.public tokens, which are signed but not
@@ -67,21 +73,24 @@ encrypted:
 
 .. code-block:: python
 
-	from paseto import PasetoV2
+	import paseto
 	import pysodium
 	pubkey, privkey = pysodium.crypto_sign_keypair()
 	# pubkey > b'\xa7\x0b\x14\xec\x03\x97\x90\x86\x14\x12\xa0x:)\x97\xed\xdf\x81\xc3\xe4\x95\xd7R\xfe\x9bT\xba,\x92\x0c\xb9P'
 	# privkey > b'@\x1fg\x9b\x83b$\xcdJP{\x93\xe8[\xae\x05.\xe9\xcb\x13\xe7`v\xa67\xd6\xb47\x7f\x96\xdf0\xa7\x0b\x14\xec\x03\x97\x90\x86\x14\x12\xa0x:)\x97\xed\xdf\x81\xc3\xe4\x95\xd7R\xfe\x9bT\xba,\x92\x0c\xb9P'
 
-	token = PasetoV2.sign(
-		data=b'this is a message to be signed',
+	token = paseto.create(
 		key=privkey,
-		footer=b'footer is also signed'
+		purpose='public',
+		claims={'my claims': [1, 2, 3]},
+		exp_seconds=300
 	)
-	# > b'v2.public.dGhpcyBpcyBhIG1lc3NhZ2UgdG8gYmUgc2lnbmVkNfEoMB9jj2tDnM0VzIRux02fx_eTtEmWNEWYlRxyClYN8sWeagp8H04P7I3rWjhrfVGMoNzKRELW6NYnATlECg.Zm9vdGVyIGlzIGFsc28gc2lnbmVk'
+	# > b'v2.public.eyJteSBjbGFpbXMiOiBbMSwgMiwgM10sICJleHAiOiAiMjAxOC0wMy0xM1QxNDo0MzozNC0wNjowMCJ9vjeSnGkfEk7tkHg5gj07vFo-YYBMTYEuSG00SqQ6iaYMeLMcc9puiOOUsu0buTziYeEmE9Fahtm1pi2PSPZpDA'
 
-	parsed = PasetoV2.verify(
-		token, pubkey
+	parsed = paseto.parse(
+		key=pubkey,
+		purpose='public',
+		token=token,
 	)
+	# > {'message': {'my claims': [1, 2, 3], 'exp': '2018-03-13T14:43:34-06:00'}, 'footer': None}
 	print(parsed['message'])
-	print(parsed['footer'])

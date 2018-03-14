@@ -8,6 +8,7 @@ name = "pypi"
 [packages]
 
 pysodium = "*"
+pendulum = "*"
 
 
 [dev-packages]

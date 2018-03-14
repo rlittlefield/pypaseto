@@ -1,6 +1,24 @@
 import pytest
 import paseto
 
+
+def _set_unit_test_only_nonce(nonce):
+    """
+    If you are trying to figure out how to set a nonce, DONT!
+
+    When calling parse/create, the nonce is automatically generated
+    using the libsodium functions, which are likely more secure than another
+    source.
+
+    Even when accessing PasetoV2 directly (not recommended), you should never
+    need to generate your own nonce.
+
+    The tests set a nonce because the tests need a deterministic nonce because
+    they have to compare the newly generated tokens with a pre-generated token.
+    """
+    paseto.PasetoV2.nonce_for_unit_testing = nonce  # don't do this in your code
+
+
 sym_key = bytes.fromhex('707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f')
 null_key = b'\0'*32
 full_key = b'\xff'*32
@@ -100,11 +118,11 @@ public_key = bytes.fromhex(
     }
 ])
 def test_encrypt(token):
+    _set_unit_test_only_nonce(token['nonce'])
     output_token = paseto.PasetoV2.encrypt(
         plaintext=token['message'],
         key=token['key'],
         footer=token['footer'],
-        nonce_for_unit_testing=token['nonce']
     )
     assert output_token == token['raw']
 
@@ -118,12 +136,12 @@ def test_encrypt(token):
 
 
 def test_encrypt_with_footer_not_set():
+    _set_unit_test_only_nonce(nonce)
     message = b'Love is stronger than hate or fear'
     raw_token = b'v2.local.BEsKs5AolRYDb_O-bO-lwHWUextpShFSXlvv8MsrNZs3vTSnGQG4qRM9ezDl880jFwknSA6JARj2qKhDHnlSHx1GSCizfcF019U'
     output_token = paseto.PasetoV2.encrypt(
         plaintext=message,
         key=sym_key,
-        nonce_for_unit_testing=nonce
     )
     assert output_token == raw_token
 
@@ -176,3 +194,141 @@ def test_sign(token):
     verify = paseto.PasetoV2.verify(result, public_key)
     assert verify['message'] == token['message']
     assert verify['footer'] == token['footer']
+
+
+@pytest.mark.parametrize("options", [
+    {
+        'claims': {
+            'claim1': True,
+            'claim2': 999,
+            'claim3': {'nested': 'this is a string', 'array': [1, 2, 3]},
+            'claim4': 'string2'
+        },
+        'footer': {
+            'footer field': False
+        },
+        'key': sym_key,
+        'purpose': 'local',
+        'expected_header': 'v2.local',
+    },
+    {
+        'claims': {
+            'claim1': True,
+            'claim2': 999,
+            'claim3': {'nested': 'this is a string', 'array': [1, 2, 3]},
+            'claim4': 'string2'
+        },
+        'footer': {
+            'footer field': False
+        },
+        'key': private_key,
+        'public_key': public_key,
+        'purpose': 'public',
+        'expected_header': 'v2.public',
+    },
+    {
+        'claims': {
+            'claim1': True,
+            'claim2': 999,
+            'claim3': {'nested': 'this is a string', 'array': [1, 2, 3]},
+            'claim4': 'string2'
+        },
+        'footer': {
+            'footer field': False
+        },
+        'key': sym_key,
+        'purpose': 'local',
+        'expected_header': 'v2.local'
+    },
+])
+def test_create(options):
+    create_params = {
+        'key': options['key'],
+        'purpose': options['purpose'],
+        'claims': options['claims'],
+        'footer': options['footer'],
+    }
+
+    token = paseto.create(**create_params)
+    assert token.startswith(options['expected_header'].encode())
+    parse_key = options.get('public_key', options['key'])
+    parsed = paseto.parse(
+        key=parse_key,
+        purpose=options['purpose'],
+        token=token,
+    )
+    assert parsed['message'] == options['claims']
+    assert parsed['footer'] == options['footer']
+
+
+def test_exp_claim():
+    token = paseto.create(
+        key=private_key,
+        purpose='public',
+        claims={'my claims': [1, 2, 3]},
+        exp_seconds=300
+    )
+    parsed = paseto.parse(
+        key=public_key,
+        purpose='public',
+        token=token,
+    )
+    assert parsed
+
+
+def test_claim_is_expired():
+    token = paseto.create(
+        key=private_key,
+        purpose='public',
+        claims={'my claims': [1, 2, 3]},
+        exp_seconds=-300
+    )
+    with pytest.raises(paseto.PasetoTokenExpired):
+        paseto.parse(
+            key=public_key,
+            purpose='public',
+            token=token,
+        )
+
+
+def test_skip_validation_on_expired():
+    token = paseto.create(
+        key=private_key,
+        purpose='public',
+        claims={'my claims': [1, 2, 3]},
+        exp_seconds=-300
+    )
+    parsed = paseto.parse(
+        key=public_key,
+        purpose='public',
+        token=token,
+        validate=False
+    )
+    assert parsed
+
+
+def test_required_claims():
+    token = paseto.create(
+        key=private_key,
+        purpose='public',
+        claims={'my claims': [1, 2, 3]},
+        exp_seconds=-300
+    )
+    parsed = paseto.parse(
+        key=public_key,
+        purpose='public',
+        token=token,
+        validate=False,
+        required_claims=['exp', 'my claims']
+    )
+    assert 'exp' in parsed['message']
+    assert 'my claims' in parsed['message']
+
+    with pytest.raises(paseto.PasetoValidationError):
+        paseto.parse(
+            key=public_key,
+            purpose='public',
+            token=token,
+            validate=False,
+            required_claims=['exp', 'missing']
+        )
