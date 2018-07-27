@@ -1,3 +1,5 @@
+import json
+
 import pytest
 import paseto
 
@@ -19,6 +21,11 @@ def _set_unit_test_only_nonce(nonce):
     paseto.PasetoV2.nonce_for_unit_testing = nonce  # don't do this in your code
 
 
+def _encode(o):
+    """Produce a stable, compact JSON encoding"""
+    return json.dumps(o, sort_keys=True, separators=(',', ':')).encode('utf8')
+
+
 sym_key = bytes.fromhex('707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f')
 null_key = b'\0'*32
 full_key = b'\xff'*32
@@ -30,6 +37,7 @@ private_key = bytes.fromhex(
 public_key = bytes.fromhex(
     '1eb9dbbbbc047c03fd70604e0071f0987e16b28b757225c11f00415d0e20b1a2'
 )
+
 
 @pytest.mark.parametrize("token", [
     {
@@ -115,6 +123,20 @@ public_key = bytes.fromhex(
         'key': sym_key,
         'footer': b'Cuon Alpinus',
         'nonce': nonce2
+    },
+    {
+        'raw': b'v2.local.lClhzVOuseCWYep44qbA8rmXry66lUupyENijX37_I_z34EiOlfyuwqIIhOjF-e9m2J-Qs17Gs-BpjpLlh3zf-J37n7YGHqMBV6G5xD2aeIKpck6rhfwHpGF38L7ryYuzuUeqmPg8XozSfU4PuPp9o8.UGFyYWdvbiBJbml0aWF0aXZlIEVudGVycHJpc2Vz',
+        'message': _encode({'data': 'this is a signed message', 'expires': '2019-01-01T00:00:00+00:00'}),
+        'key': sym_key,
+        'footer': b'Paragon Initiative Enterprises',
+        'nonce': nonce2,
+    },
+    {
+        'raw': b'v2.local.5K4SCXNhItIhyNuVIZcwrdtaDKiyF81-eWHScuE0idiVqCo72bbjo07W05mqQkhLZdVbxEa5I_u5sgVk1QLkcWEcOSlLHwNpCkvmGGlbCdNExn6Qclw3qTKIIl5-zSLIrxZqOLwcFLYbVK1SrQ.eyJraWQiOiJ6VmhNaVBCUDlmUmYyc25FY1Q3Z0ZUaW9lQTlDT2NOeTlEZmdMMVc2MGhhTiJ9',
+        'message': _encode({'data': 'this is a signed message', 'exp': '2019-01-01T00:00:00+00:00'}),
+        'key': sym_key,
+        'footer': _encode({'kid': 'zVhMiPBP9fRf2snEcT7gFTioeA9COcNy9DfgL1W60haN'}),
+        'nonce': nonce2,
     }
 ])
 def test_encrypt(token):
@@ -182,7 +204,25 @@ def test_encrypt_with_footer_not_set():
         'message': b'Frank Denis rocks',
         'key': private_key,
         'footer': b'Cuon Alpinus'
-    }
+    },
+    {
+        'raw': b'v2.public.eyJkYXRhIjoidGhpcyBpcyBhIHNpZ25lZCBtZXNzYWdlIiwiZXhwaXJlcyI6IjIwMTktMDEtMDFUMDA6MDA6MDArMDA6MDAifSUGY_L1YtOvo1JeNVAWQkOBILGSjtkX_9-g2pVPad7_SAyejb6Q2TDOvfCOpWYH5DaFeLOwwpTnaTXeg8YbUwI',
+        'message': _encode({'data': 'this is a signed message', 'expires': '2019-01-01T00:00:00+00:00'}),
+        'key': private_key,
+        'footer': b'',
+    },
+    {
+        'raw': b'v2.public.eyJkYXRhIjoidGhpcyBpcyBhIHNpZ25lZCBtZXNzYWdlIiwiZXhwaXJlcyI6IjIwMTktMDEtMDFUMDA6MDA6MDArMDA6MDAifcMYjoUaEYXAtzTDwlcOlxdcZWIZp8qZga3jFS8JwdEjEvurZhs6AmTU3bRW5pB9fOQwm43rzmibZXcAkQ4AzQs.UGFyYWdvbiBJbml0aWF0aXZlIEVudGVycHJpc2Vz',
+        'message': _encode({'data': 'this is a signed message', 'expires': '2019-01-01T00:00:00+00:00'}),
+        'key': private_key,
+        'footer': b'Paragon Initiative Enterprises',
+    },
+    {
+        'raw': b'v2.public.eyJkYXRhIjoidGhpcyBpcyBhIHNpZ25lZCBtZXNzYWdlIiwiZXhwIjoiMjAxOS0wMS0wMVQwMDowMDowMCswMDowMCJ9flsZsx_gYCR0N_Ec2QxJFFpvQAs7h9HtKwbVK2n1MJ3Rz-hwe8KUqjnd8FAnIJZ601tp7lGkguU63oGbomhoBw.eyJraWQiOiJ6VmhNaVBCUDlmUmYyc25FY1Q3Z0ZUaW9lQTlDT2NOeTlEZmdMMVc2MGhhTiJ9',
+        'message': _encode({'data': 'this is a signed message', 'exp': '2019-01-01T00:00:00+00:00'}),
+        'key': private_key,
+        'footer': _encode({'kid': 'zVhMiPBP9fRf2snEcT7gFTioeA9COcNy9DfgL1W60haN'}),
+    },
 ])
 def test_sign(token):
     result = paseto.PasetoV2.sign(
