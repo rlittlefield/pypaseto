@@ -221,23 +221,6 @@ def test_encrypt(token):
         assert decrypted['footer']== token['footer'], f"{token['name']} decryption did not produce original footer"
 
 
-def test_encrypt_with_footer_not_set():
-    _set_unit_test_only_nonce(nonce)
-    message = b'Love is stronger than hate or fear'
-    raw_token = b'v2.local.BEsKs5AolRYDb_O-bO-lwHWUextpShFSXlvv8MsrNZs3vTSnGQG4qRM9ezDl880jFwknSA6JARj2qKhDHnlSHx1GSCizfcF019U'
-    output_token = paseto.PasetoV2.encrypt(
-        plaintext=message,
-        key=sym_key,
-    )
-    assert output_token == raw_token
-
-    decrypted = paseto.PasetoV2.decrypt(
-        token=raw_token,
-        key=sym_key,
-    )
-    assert decrypted['message'] == message
-
-
 @pytest.mark.parametrize("token", [
     {
         'name': 'Test Vector S-1',
