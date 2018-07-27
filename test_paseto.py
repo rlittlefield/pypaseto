@@ -137,7 +137,51 @@ public_key = bytes.fromhex(
         'key': sym_key,
         'footer': _encode({'kid': 'zVhMiPBP9fRf2snEcT7gFTioeA9COcNy9DfgL1W60haN'}),
         'nonce': nonce2,
-    }
+    },
+
+    # These are the "official" test vectors
+    {   # Test Vector 2-E-1
+        'raw': b'v2.local.97TTOvgwIxNGvV80XKiGZg_kD3tsXM_-qB4dZGHOeN1cTkgQ4PnW8888l802W8d9AvEGnoNBY3BnqHORy8a5cC8aKpbA0En8XELw2yDk2f1sVODyfnDbi6rEGMY3pSfCbLWMM2oHJxvlEl2XbQ',
+        'message': _encode({'data': 'this is a signed message', 'exp': '2019-01-01T00:00:00+00:00'}),
+        'key': sym_key,
+        'footer': b'',
+        'nonce': nonce,
+    },
+    {   # Test Vector 2-E-2
+        'raw': b'v2.local.CH50H-HM5tzdK4kOmQ8KbIvrzJfjYUGuu5Vy9ARSFHy9owVDMYg3-8rwtJZQjN9ABHb2njzFkvpr5cOYuRyt7CRXnHt42L5yZ7siD-4l-FoNsC7J2OlvLlIwlG06mzQVunrFNb7Z3_CHM0PK5w',
+        'message': _encode({'data': 'this is a secret message', 'exp': '2019-01-01T00:00:00+00:00'}),
+        'key': sym_key,
+        'footer': b'',
+        'nonce': nonce,
+    },
+    {   # Test Vector 2-E-3
+        'raw': b'v2.local.5K4SCXNhItIhyNuVIZcwrdtaDKiyF81-eWHScuE0idiVqCo72bbjo07W05mqQkhLZdVbxEa5I_u5sgVk1QLkcWEcOSlLHwNpCkvmGGlbCdNExn6Qclw3qTKIIl5-O5xRBN076fSDPo5xUCPpBA',
+        'message': _encode({'data': 'this is a signed message', 'exp': '2019-01-01T00:00:00+00:00'}),
+        'key': sym_key,
+        'footer': b'',
+        'nonce': nonce2,
+    },
+    {   # Test Vector 2-E-4
+        'raw': b'v2.local.pvFdDeNtXxknVPsbBCZF6MGedVhPm40SneExdClOxa9HNR8wFv7cu1cB0B4WxDdT6oUc2toyLR6jA6sc-EUM5ll1EkeY47yYk6q8m1RCpqTIzUrIu3B6h232h62DPbIxtjGvNRAwsLK7LcV8oQ',
+        'message': _encode({'data': 'this is a secret message', 'exp': '2019-01-01T00:00:00+00:00'}),
+        'key': sym_key,
+        'footer': b'',
+        'nonce': nonce2,
+    },
+    {   # Test Vector 2-E-5
+        'raw': b'v2.local.5K4SCXNhItIhyNuVIZcwrdtaDKiyF81-eWHScuE0idiVqCo72bbjo07W05mqQkhLZdVbxEa5I_u5sgVk1QLkcWEcOSlLHwNpCkvmGGlbCdNExn6Qclw3qTKIIl5-zSLIrxZqOLwcFLYbVK1SrQ.eyJraWQiOiJ6VmhNaVBCUDlmUmYyc25FY1Q3Z0ZUaW9lQTlDT2NOeTlEZmdMMVc2MGhhTiJ9',
+        'message': _encode({'data': 'this is a signed message', 'exp': '2019-01-01T00:00:00+00:00'}),
+        'key': sym_key,
+        'footer': _encode({'kid': 'zVhMiPBP9fRf2snEcT7gFTioeA9COcNy9DfgL1W60haN'}),
+        'nonce': nonce2,
+    },
+    {   # Test Vector 2-E-6
+        'raw': b'v2.local.pvFdDeNtXxknVPsbBCZF6MGedVhPm40SneExdClOxa9HNR8wFv7cu1cB0B4WxDdT6oUc2toyLR6jA6sc-EUM5ll1EkeY47yYk6q8m1RCpqTIzUrIu3B6h232h62DnMXKdHn_Smp6L_NfaEnZ-A.eyJraWQiOiJ6VmhNaVBCUDlmUmYyc25FY1Q3Z0ZUaW9lQTlDT2NOeTlEZmdMMVc2MGhhTiJ9',
+        'message': _encode({'data': 'this is a secret message', 'exp': '2019-01-01T00:00:00+00:00'}),
+        'key': sym_key,
+        'footer': _encode({'kid': 'zVhMiPBP9fRf2snEcT7gFTioeA9COcNy9DfgL1W60haN'}),
+        'nonce': nonce2,
+    },
 ])
 def test_encrypt(token):
     _set_unit_test_only_nonce(token['nonce'])
@@ -218,6 +262,20 @@ def test_encrypt_with_footer_not_set():
         'footer': b'Paragon Initiative Enterprises',
     },
     {
+        'raw': b'v2.public.eyJkYXRhIjoidGhpcyBpcyBhIHNpZ25lZCBtZXNzYWdlIiwiZXhwIjoiMjAxOS0wMS0wMVQwMDowMDowMCswMDowMCJ9flsZsx_gYCR0N_Ec2QxJFFpvQAs7h9HtKwbVK2n1MJ3Rz-hwe8KUqjnd8FAnIJZ601tp7lGkguU63oGbomhoBw.eyJraWQiOiJ6VmhNaVBCUDlmUmYyc25FY1Q3Z0ZUaW9lQTlDT2NOeTlEZmdMMVc2MGhhTiJ9',
+        'message': _encode({'data': 'this is a signed message', 'exp': '2019-01-01T00:00:00+00:00'}),
+        'key': private_key,
+        'footer': _encode({'kid': 'zVhMiPBP9fRf2snEcT7gFTioeA9COcNy9DfgL1W60haN'}),
+    },
+
+    # These are the "official" test vectors
+    {   # Test Vector 2-S-1
+        'raw': b'v2.public.eyJkYXRhIjoidGhpcyBpcyBhIHNpZ25lZCBtZXNzYWdlIiwiZXhwIjoiMjAxOS0wMS0wMVQwMDowMDowMCswMDowMCJ9HQr8URrGntTu7Dz9J2IF23d1M7-9lH9xiqdGyJNvzp4angPW5Esc7C5huy_M8I8_DjJK2ZXC2SUYuOFM-Q_5Cw',
+        'message': _encode({'data': 'this is a signed message', 'exp': '2019-01-01T00:00:00+00:00'}),
+        'key': private_key,
+        'footer': b'',
+    },
+    {   # Test Vector 2-S-2
         'raw': b'v2.public.eyJkYXRhIjoidGhpcyBpcyBhIHNpZ25lZCBtZXNzYWdlIiwiZXhwIjoiMjAxOS0wMS0wMVQwMDowMDowMCswMDowMCJ9flsZsx_gYCR0N_Ec2QxJFFpvQAs7h9HtKwbVK2n1MJ3Rz-hwe8KUqjnd8FAnIJZ601tp7lGkguU63oGbomhoBw.eyJraWQiOiJ6VmhNaVBCUDlmUmYyc25FY1Q3Z0ZUaW9lQTlDT2NOeTlEZmdMMVc2MGhhTiJ9',
         'message': _encode({'data': 'this is a signed message', 'exp': '2019-01-01T00:00:00+00:00'}),
         'key': private_key,
