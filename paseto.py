@@ -147,7 +147,7 @@ class PasetoV2:
 class JsonEncoder(object):
     @classmethod
     def dumps(cls, var):
-        return json.dumps(var).encode('utf8')
+        return json.dumps(var, sort_keys=True, separators=(',', ':')).encode('utf8')
 
     @classmethod
     def loads(cls, var):
