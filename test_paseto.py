@@ -138,8 +138,8 @@ public_key = bytes.fromhex(
     },
     {
         'name': 'Test Vector 2E-5',
-        'raw': b'v2.local.lClhzVOuseCWYep44qbA8rmXry66lUupyENijX37_I_z34EiOlfyuwqIIhOjF-e9m2J-Qs17Gs-BpjpLlh3zf-J37n7YGHqMBV6G5xD2aeIKpck6rhfwHpGF38L7ryYuzuUeqmPg8XozSfU4PuPp9o8.UGFyYWdvbiBJbml0aWF0aXZlIEVudGVycHJpc2Vz',
-        'message': _encode({'data': 'this is a signed message', 'expires': '2019-01-01T00:00:00+00:00'}),
+        'raw': b'v2.local.5K4SCXNhItIhyNuVIZcwrdtaDKiyF81-eWHScuE0idiVqCo72bbjo07W05mqQkhLZdVbxEa5I_u5sgVk1QLkcWEcOSlLHwNpCkvmGGlbCdNExn6Qclw3qTKIIl5-zKeei_8CY0oUMtEai3HYcQ.UGFyYWdvbiBJbml0aWF0aXZlIEVudGVycHJpc2Vz',
+        'message': _encode({'data': 'this is a signed message', 'exp': '2019-01-01T00:00:00+00:00'}),
         'key': sym_key,
         'footer': b'Paragon Initiative Enterprises',
         'nonce': nonce2,
@@ -259,20 +259,20 @@ def test_encrypt(token):
     },
     {
         'name': 'Test Vector S-6',
-        'raw': b'v2.public.eyJkYXRhIjoidGhpcyBpcyBhIHNpZ25lZCBtZXNzYWdlIiwiZXhwaXJlcyI6IjIwMTktMDEtMDFUMDA6MDA6MDArMDA6MDAifSUGY_L1YtOvo1JeNVAWQkOBILGSjtkX_9-g2pVPad7_SAyejb6Q2TDOvfCOpWYH5DaFeLOwwpTnaTXeg8YbUwI',
-        'message': _encode({'data': 'this is a signed message', 'expires': '2019-01-01T00:00:00+00:00'}),
+        'raw': b'v2.public.eyJkYXRhIjoidGhpcyBpcyBhIHNpZ25lZCBtZXNzYWdlIiwiZXhwIjoiMjAxOS0wMS0wMVQwMDowMDowMCswMDowMCJ9HQr8URrGntTu7Dz9J2IF23d1M7-9lH9xiqdGyJNvzp4angPW5Esc7C5huy_M8I8_DjJK2ZXC2SUYuOFM-Q_5Cw',
+        'message': _encode({'data': 'this is a signed message', 'exp': '2019-01-01T00:00:00+00:00'}),
         'key': private_key,
         'footer': b'',
     },
     {
-        'name': 'Test Vector S-6',  # duplicated test vector name, see issue paragonie/paseto#85
-        'raw': b'v2.public.eyJkYXRhIjoidGhpcyBpcyBhIHNpZ25lZCBtZXNzYWdlIiwiZXhwaXJlcyI6IjIwMTktMDEtMDFUMDA6MDA6MDArMDA6MDAifcMYjoUaEYXAtzTDwlcOlxdcZWIZp8qZga3jFS8JwdEjEvurZhs6AmTU3bRW5pB9fOQwm43rzmibZXcAkQ4AzQs.UGFyYWdvbiBJbml0aWF0aXZlIEVudGVycHJpc2Vz',
-        'message': _encode({'data': 'this is a signed message', 'expires': '2019-01-01T00:00:00+00:00'}),
+        'name': 'Test Vector S-7',
+        'raw': b'v2.public.eyJkYXRhIjoidGhpcyBpcyBhIHNpZ25lZCBtZXNzYWdlIiwiZXhwIjoiMjAxOS0wMS0wMVQwMDowMDowMCswMDowMCJ9fgvV_frkjyH7h0CWrGfonEctefgzQaCkICOAxDdbixbPvH_SMm0T6343YfgEAlOi8--euLS5gLlykHhREL38BA.UGFyYWdvbiBJbml0aWF0aXZlIEVudGVycHJpc2Vz',
+        'message': _encode({'data': 'this is a signed message', 'exp': '2019-01-01T00:00:00+00:00'}),
         'key': private_key,
         'footer': b'Paragon Initiative Enterprises',
     },
     {
-        'name': 'Test Vector 2E-6',  # almost certainly the wrong name, see paragonie/paseto#85
+        'name': 'Test Vector S-8',
         'raw': b'v2.public.eyJkYXRhIjoidGhpcyBpcyBhIHNpZ25lZCBtZXNzYWdlIiwiZXhwIjoiMjAxOS0wMS0wMVQwMDowMDowMCswMDowMCJ9flsZsx_gYCR0N_Ec2QxJFFpvQAs7h9HtKwbVK2n1MJ3Rz-hwe8KUqjnd8FAnIJZ601tp7lGkguU63oGbomhoBw.eyJraWQiOiJ6VmhNaVBCUDlmUmYyc25FY1Q3Z0ZUaW9lQTlDT2NOeTlEZmdMMVc2MGhhTiJ9',
         'message': _encode({'data': 'this is a signed message', 'exp': '2019-01-01T00:00:00+00:00'}),
         'key': private_key,
