@@ -48,7 +48,6 @@ class PasetoV2:
     valid_purposes = [b'local', b'public']
     local_header = b'v2.local.'
     public_header = b'v2.public.'
-    nonce_for_unit_testing = None
 
     @classmethod
     def encrypt(
@@ -57,14 +56,10 @@ class PasetoV2:
         key: bytes,
         footer=b'',
     ) -> bytes:
-        if cls.nonce_for_unit_testing:
-            nonce = cls.nonce_for_unit_testing
-            cls.nonce_for_unit_testing = None
-        else:
-            nonce = pysodium.randombytes(pysodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES)
+        nonce_key = pysodium.randombytes(pysodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES)
         nonce = pysodium.crypto_generichash(
             plaintext,
-            k=nonce,
+            k=nonce_key,
             outlen=pysodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
         )
         ciphertext = pysodium.crypto_aead_xchacha20poly1305_ietf_encrypt(

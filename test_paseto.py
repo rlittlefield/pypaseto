@@ -2,23 +2,7 @@ import json
 
 import pytest
 import paseto
-
-
-def _set_unit_test_only_nonce(nonce):
-    """
-    If you are trying to figure out how to set a nonce, DONT!
-
-    When calling parse/create, the nonce is automatically generated
-    using the libsodium functions, which are likely more secure than another
-    source.
-
-    Even when accessing PasetoV2 directly (not recommended), you should never
-    need to generate your own nonce.
-
-    The tests set a nonce because the tests need a deterministic nonce because
-    they have to compare the newly generated tokens with a pre-generated token.
-    """
-    paseto.PasetoV2.nonce_for_unit_testing = nonce  # don't do this in your code
+from unittest import mock
 
 
 def _encode(o):
@@ -39,6 +23,7 @@ public_key = bytes.fromhex(
 )
 
 
+@mock.patch('pysodium.randombytes')
 @pytest.mark.parametrize("token", [
     {
         'name': 'Test Vector 2E-1-1',
@@ -203,8 +188,8 @@ public_key = bytes.fromhex(
         'nonce': nonce2,
     },
 ])
-def test_encrypt(token):
-    _set_unit_test_only_nonce(token['nonce'])
+def test_encrypt(mock_randombytes, token):
+    mock_randombytes.return_value = token['nonce']
     output_token = paseto.PasetoV2.encrypt(
         plaintext=token['message'],
         key=token['key'],
