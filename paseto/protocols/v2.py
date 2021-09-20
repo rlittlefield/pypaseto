@@ -1,5 +1,12 @@
-from paseto.helpers import PasetoMessage
 import pysodium
+from paseto.helpers import (
+    pre_auth_encode,
+    b64decode,
+    b64encode,
+    validate_and_remove_footer,
+)
+from paseto.exceptions import *
+from .protocol import Protocol
 
 
 class ProtocolVersion2(Protocol):
@@ -10,18 +17,24 @@ class ProtocolVersion2(Protocol):
 
     @classmethod
     def generate_asymmetric_secret_key(cls):
-        return V2AsymmetricSecretKey.generate()
+        from paseto.keys.asymmetric_key import AsymmetricSecretKey
+
+        return AsymmetricSecretKey.generate(protocol=cls)
 
     @classmethod
-    def generate_symmetric_key_cls(cls):
-        return V2SymmetricKey.generate()
+    def generate_symmetric_key(cls):
+        from paseto.keys.symmetric_key import SymmetricKey
+
+        return SymmetricKey.generate(protocol=cls)
 
     @classmethod
-    def encrypt(cls, data, key, footer="", implicit=""):
+    def encrypt(cls, data: bytes, key, footer="", implicit=""):
         return cls._encrypt(data, key, footer, implicit)
 
     @classmethod
-    def _encrypt(cls, data, key, footer="", implicit="", _nonce_for_unit_testing=""):
+    def _encrypt(
+        cls, data: bytes, key, footer="", implicit="", _nonce_for_unit_testing=""
+    ):
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
@@ -38,7 +51,11 @@ class ProtocolVersion2(Protocol):
 
     @classmethod
     def decrypt(
-        cls, data, key: SymmetricKey, footer: Optional[str] = None, implicit: str = ""
+        cls,
+        data: bytes,
+        key: SymmetricKey,
+        footer: Optional[bytes] = None,
+        implicit: bytes = "",
     ):
         if key.protocol is not cls:
             raise PasetoException(
@@ -59,7 +76,9 @@ class ProtocolVersion2(Protocol):
         )
 
     @classmethod
-    def sign(cls, data: str, key: AsymmetricSecretKey, footer: str = "", implicit=""):
+    def sign(
+        cls, data: bytes, key: AsymmetricSecretKey, footer: bytes = "", implicit=""
+    ):
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
@@ -76,7 +95,7 @@ class ProtocolVersion2(Protocol):
         )
 
     @classmethod
-    def verify(cls, sign_msg: str, key, footer: Optional[str] = None, implicit=""):
+    def verify(cls, sign_msg: bytes, key, footer: Optional[bytes] = None, implicit=""):
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
@@ -108,7 +127,13 @@ class ProtocolVersion2(Protocol):
 
     @classmethod
     def aead_encrypt(
-        cls, data, header, key, footer="", implicit="", _nonce_for_unit_testing=""
+        cls,
+        data,
+        header: bytes,
+        key: bytes,
+        footer: bytes = b"",
+        implicit: bytes = b"",
+        _nonce_for_unit_testing: bytes = b"",
     ):
         if _nonce_for_unit_testing:
             nonce = _nonce_for_unit_testing

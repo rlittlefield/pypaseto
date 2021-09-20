@@ -1,4 +1,18 @@
+import pysodium
+from paseto.helpers import (
+    pre_auth_encode,
+    b64decode,
+    b64encode,
+    validate_and_remove_footer,
+)
 from paseto.exceptions import *
+from .protocol import Protocol
+from Cryptodome.PublicKey import ECC
+from Cryptodome.Signature import DSS
+from hashlib import sha384
+from Cryptodome.Cipher import AES
+from Cryptodome.Util.Padding import unpad
+import hmac
 
 
 class ProtocolVersion3(Protocol):
@@ -13,11 +27,15 @@ class ProtocolVersion3(Protocol):
 
     @classmethod
     def generate_asymmetric_secret_key(cls):
-        return V3AsymmetricSecretKey.generate()
+        from paseto.keys.asymmetric_key import AsymmetricSecretKey
+
+        return AsymmetricSecretKey.generate(protocol=cls)
 
     @classmethod
-    def generate_symmetric_key_cls(cls):
-        return V3SymmetricKey.generate()
+    def generate_symmetric_key(cls):
+        from paseto.keys.symmetric_key import SymmetricKey
+
+        return SymmetricKey.generate(protocol=cls)
 
     @classmethod
     def encrypt(cls, data, key: SymmetricKey, footer: str = "", implicit: str = ""):
@@ -27,7 +45,7 @@ class ProtocolVersion3(Protocol):
     def _encrypt(
         cls,
         data,
-        key: SymmetricKey,
+        key,
         footer: str = "",
         implicit: str = "",
         _nonce_for_unit_testing=None,

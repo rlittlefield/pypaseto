@@ -1,6 +1,12 @@
 import pysodium
-from paseto.helpers import pre_auth_encode, b64decode, b64encode
+from paseto.helpers import (
+    pre_auth_encode,
+    b64decode,
+    b64encode,
+    validate_and_remove_footer,
+)
 from paseto.exceptions import *
+from .protocol import Protocol
 
 
 class ProtocolVersion4(Protocol):
@@ -12,11 +18,15 @@ class ProtocolVersion4(Protocol):
 
     @classmethod
     def generate_asymmetric_secret_key(cls):
-        return V4AsymmetricSecretKey.generate()
+        from paseto.keys.asymmetric_key import AsymmetricSecretKey
+
+        return AsymmetricSecretKey.generate(protocol=cls)
 
     @classmethod
-    def generate_symmetric_key_cls(cls):
-        return V4SymmetricKey.generate()
+    def generate_symmetric_key(cls):
+        from paseto.keys.symmetric_key import SymmetricKey
+
+        return SymmetricKey.generate(protocol=cls)
 
     @classmethod
     def encrypt(cls, data, key, footer="", implicit=""):
