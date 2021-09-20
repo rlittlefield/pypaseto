@@ -11,14 +11,11 @@ Platform-Agnostic Security Tokens for Python
 .. image:: https://travis-ci.org/rlittlefield/pypaseto.svg?branch=master
     :target: https://travis-ci.org/rlittlefield/pypaseto
 
-This is an unofficial initial implementation of
-`PASETO: Platform-Agnostic Security Tokens <https://github.com/paragonie/past/>`_ for Python.
+This is an unofficial implementation of
+`PASETO: Platform-Agnostic Security Tokens <https://github.com/paragonie/paseto>`_ for Python.
 
-This is not yet production-ready; use at your own risk.
-
-Forked from `https://github.com/JimDabell/pypast <https://github.com/JimDabell/pypast>`_,
-which was originally designed for an earlier spec of PASETO when it was still
-PAST.
+Before using, please note that only version 2 is supported by this library! Support for Paseto versions 3 and 4 is coming soon!
+Versions 1 and 2 are expected to be deprecated in the official standard starting in 2022.
 
 Installation
 ------------
