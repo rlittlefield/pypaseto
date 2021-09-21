@@ -9,7 +9,7 @@ import pendulum
 
 from .helpers import pre_auth_encode, b64decode, b64encode, _extract_footer_unsafe
 
-from exceptions import *
+from .exceptions import *
 from typing import Union, Optional, List
 from .keys.symmetric_key import SymmetricKey
 from .keys.asymmetric_key import AsymmetricSecretKey, AsymmetricPublicKey

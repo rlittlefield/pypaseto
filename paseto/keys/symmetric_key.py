@@ -1,6 +1,8 @@
+from paseto.protocols.protocol import Protocol
 from paseto.protocols.v3 import ProtocolVersion3
 from paseto.protocols.v4 import ProtocolVersion4
 from paseto.protocols.v2 import ProtocolVersion2
+import secrets
 
 
 class SymmetricKey:
@@ -17,7 +19,10 @@ class SymmetricKey:
     def generate(cls, protocol=None):
         if not protocol:
             protocol = ProtocolVersion4
-        return cls(key_material=secrets.token_bytes(protocol.symmetric_key_byte_length))
+        return cls(
+            key_material=secrets.token_bytes(protocol.symmetric_key_byte_length),
+            protocol=protocol,
+        )
 
     @classmethod
     def v3(cls, key_material) -> "SymmetricKey":

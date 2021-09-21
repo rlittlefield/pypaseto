@@ -6,6 +6,7 @@ from paseto.helpers import b64encode, b64decode
 
 import binascii
 import pysodium
+import secrets
 from typing import Optional
 from Cryptodome.PublicKey import ECC
 from Cryptodome.Signature import DSS
@@ -13,6 +14,7 @@ from hashlib import sha384
 from Cryptodome.Cipher import AES
 from Cryptodome.Util.Padding import unpad
 import hmac
+from paseto.exceptions import *
 
 
 class AsymmetricSecretKey:
@@ -31,9 +33,14 @@ class AsymmetricSecretKey:
             ):
                 key_material = key_material[:64]
             elif key_length != pysodium.crypto_sign_SECRETKEYBYTES:
-                raise PasetoException(
-                    "Secret keys must be 32 or 64 bytes long;" + key_length + " given"
-                )
+                if key_length != pysodium.crypto_sign_SEEDBYTES:
+                    raise PasetoException(
+                        "Secret keys must be 32 or 64 bytes long; "
+                        + str(key_length)
+                        + " given"
+                    )
+                keypair = pysodium.crypto_sign_seed_keypair(key_material)
+                key_material = keypair[0]
 
         self.key = key_material
         self.protocol = protocol
@@ -56,7 +63,7 @@ class AsymmetricSecretKey:
         if protocol is ProtocolVersion3:
             pass
         return cls(
-            key_material=pysodium.crypto_sign_secretkey(pysodium.crypto_sign_keypair()),
+            key_material=pysodium.crypto_sign_keypair()[1],
             protocol=protocol,
         )
 
@@ -82,7 +89,8 @@ class AsymmetricSecretKey:
             return AsymmetricPublicKey(key_material=pk, protocol=self.protocol)
         else:
             return AsymmetricPublicKey(
-                key_material=pysodium.crypto_sign_sk_to_pk(self.key), protocol=protocol
+                key_material=pysodium.crypto_sign_sk_to_pk(sk=self.key),
+                protocol=self.protocol,
             )
 
 
@@ -95,13 +103,9 @@ class AsymmetricPublicKey:
         if secrets.compare_digest(
             protocol.header, ProtocolVersion2.header
         ) or secrets.compare_digest(protocol.header, ProtocolVersion4.header):
-            if (
-                key_length
-                == pysodium.crypto_sign_PUBLICKEYBYTES
-                + pysodium.crypto_sign_SECRETKEYBYTES
-            ):
-                key_material = key_material[:64]
-            elif key_length != pysodium.crypto_sign_SECRETKEYBYTES:
+            if key_length == pysodium.crypto_sign_PUBLICKEYBYTES << 1:
+                key_material = binascii.decode(key_material)
+            elif key_length != pysodium.crypto_sign_PUBLICKEYBYTES:
                 raise PasetoException(
                     "Secret keys must be 32 or 64 bytes long;" + key_length + " given"
                 )

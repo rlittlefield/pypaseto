@@ -1,5 +1,7 @@
 from .exceptions import *
 import secrets
+import struct
+import base64
 
 
 def pre_auth_encode(*parts):
@@ -36,12 +38,11 @@ class PasetoMessage:
         footer = b64decode(pieces[3]) if count > 3 else ""
         return cls(header, payload, footer)
 
-    @classmethod
     def __str__(self):
         message = self.header + b64encode(self.payload)
         if self.footer == "":
-            return message
-        return message + "." + b64encode(footer)
+            return message.decode()
+        return (message + b"." + b64encode(self.footer)).decode()
 
 
 def _extract_footer_unsafe(token):

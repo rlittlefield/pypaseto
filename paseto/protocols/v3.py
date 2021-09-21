@@ -13,6 +13,7 @@ from hashlib import sha384
 from Cryptodome.Cipher import AES
 from Cryptodome.Util.Padding import unpad
 import hmac
+from typing import Optional
 
 
 class ProtocolVersion3(Protocol):
@@ -20,7 +21,7 @@ class ProtocolVersion3(Protocol):
     nonce_size = 32
     mac_size = 48
     sign_size = 96
-    header = "v3"
+    header = b"v3"
     supports_implicit_assertions = True
     cipher_mode = AES.MODE_CTR
     hash_algorithm = sha384
@@ -38,7 +39,7 @@ class ProtocolVersion3(Protocol):
         return SymmetricKey.generate(protocol=cls)
 
     @classmethod
-    def encrypt(cls, data, key: SymmetricKey, footer: str = "", implicit: str = ""):
+    def encrypt(cls, data, key, footer: str = "", implicit: str = ""):
         return cls._encrypt(data=data, key=key, footer=footer, implicit=implicit)
 
     @classmethod
@@ -57,7 +58,7 @@ class ProtocolVersion3(Protocol):
 
         return cls.aead_encrypt(
             data=data,
-            header=cls.header + ".local.",
+            header=cls.header + b".local.",
             key=key,
             footer=footer,
             implicit=implicit,
@@ -65,9 +66,7 @@ class ProtocolVersion3(Protocol):
         )
 
     @classmethod
-    def decrypt(
-        cls, data, key: SymmetricKey, footer: Optional[str] = None, implicit: str = ""
-    ):
+    def decrypt(cls, data, key, footer: Optional[str] = None, implicit: str = ""):
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
@@ -80,20 +79,20 @@ class ProtocolVersion3(Protocol):
 
         return cls.aead_decrypt(
             data=data,
-            header=cls.header + ".local.",
+            header=cls.header + b".local.",
             key=key,
             footer=footer,
             implicit=implicit,
         )
 
     @classmethod
-    def sign(cls, data: str, key: AsymmetricSecretKey, footer: str = "", implicit=""):
+    def sign(cls, data: str, key, footer: str = "", implicit=""):
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
             )
 
-        header = cls.header + ".public."
+        header = cls.header + b".public."
         ecc_key = ECC.import_key(key.key)
         signer = DSS.new(key=ecc_key, mode="deterministic-rfc6979", encoding="binary")
         pubkey = key.get_public_key()
@@ -147,7 +146,7 @@ class ProtocolVersion3(Protocol):
         cls,
         plaintext,
         header,
-        key: SymmetricKey,
+        key,
         footer: str = "",
         implicit="",
         _nonce_for_unit_testing="",

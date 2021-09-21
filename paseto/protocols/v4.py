@@ -7,6 +7,7 @@ from paseto.helpers import (
 )
 from paseto.exceptions import *
 from .protocol import Protocol
+from typing import Optional
 
 
 class ProtocolVersion4(Protocol):
@@ -14,7 +15,7 @@ class ProtocolVersion4(Protocol):
     nonce_size = 32
     mac_size = 32
     sign_size = pysodium.crypto_sign_BYTES
-    header = "v4"
+    header = b"v4"
 
     @classmethod
     def generate_asymmetric_secret_key(cls):
@@ -40,7 +41,7 @@ class ProtocolVersion4(Protocol):
             )
         return cls.aead_encrypt(
             data=data,
-            header=cls.header + ".local.",
+            header=cls.header + b".local.",
             key=key,
             footer=footer,
             implicit=implicit,
@@ -48,9 +49,7 @@ class ProtocolVersion4(Protocol):
         )
 
     @classmethod
-    def decrypt(
-        cls, data, key: SymmetricKey, footer: Optional[str] = None, implicit: str = ""
-    ):
+    def decrypt(cls, data, key, footer: Optional[str] = None, implicit: str = ""):
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
@@ -63,7 +62,7 @@ class ProtocolVersion4(Protocol):
 
         return cls.aead_decrypt(
             data=data,
-            header=cls.header + ".local.",
+            header=cls.header + b".local.",
             key=key,
             footer=footer,
             implicit=implicit,
@@ -129,13 +128,13 @@ class ProtocolVersion4(Protocol):
         return plaintext
 
     @classmethod
-    def sign(cls, data: str, key: AsymmetricSecretKey, footer: str = "", implicit=""):
+    def sign(cls, data: str, key, footer: str = "", implicit=""):
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
             )
 
-        header = cls.header + ".public."
+        header = cls.header + b".public."
 
         signature = pysodium.crypto_sign_detached(
             pre_auth_encode(header, data, footer, implicit), key.key

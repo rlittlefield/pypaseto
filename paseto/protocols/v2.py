@@ -4,16 +4,19 @@ from paseto.helpers import (
     b64decode,
     b64encode,
     validate_and_remove_footer,
+    PasetoMessage,
 )
 from paseto.exceptions import *
 from .protocol import Protocol
+from typing import Optional
+import secrets
 
 
 class ProtocolVersion2(Protocol):
     symmetric_key_byte_length = 32
     nonce_size = pysodium.crypto_aead_xchacha20poly1305_ietf_NONCEBYTES
     mac_size = 32
-    header = "v2"
+    header = b"v2"
 
     @classmethod
     def generate_asymmetric_secret_key(cls):
@@ -42,7 +45,7 @@ class ProtocolVersion2(Protocol):
 
         return cls.aead_encrypt(
             data=data,
-            header=cls.header + ".local.",
+            header=cls.header + b".local.",
             key=key,
             footer=footer,
             implicit=implicit,
@@ -53,7 +56,7 @@ class ProtocolVersion2(Protocol):
     def decrypt(
         cls,
         data: bytes,
-        key: SymmetricKey,
+        key,
         footer: Optional[bytes] = None,
         implicit: bytes = "",
     ):
@@ -69,22 +72,20 @@ class ProtocolVersion2(Protocol):
 
         return cls.aead_decrypt(
             data=data,
-            header=cls.header + ".local.",
+            header=cls.header + b".local.",
             key=key,
             footer=footer,
             implicit=implicit,
         )
 
     @classmethod
-    def sign(
-        cls, data: bytes, key: AsymmetricSecretKey, footer: bytes = "", implicit=""
-    ):
+    def sign(cls, data: bytes, key, footer: bytes = "", implicit=""):
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
             )
 
-        header = cls.header + ".public."
+        header = cls.header + b".public."
 
         signature = pysodium.crypto_sign_detached(
             pre_auth_encode(header, data, footer), key.key
@@ -107,7 +108,7 @@ class ProtocolVersion2(Protocol):
 
         sign_msg = remove_footer(sign_msg)
 
-        expect_header = cls.header + ".public."
+        expect_header = cls.header + b".public."
         header_length = len(expect_header)
         given_header = sign_msg[:header_length]
         if not secrets.compare_digest(expected_header, given_header):
@@ -130,7 +131,7 @@ class ProtocolVersion2(Protocol):
         cls,
         data,
         header: bytes,
-        key: bytes,
+        key,
         footer: bytes = b"",
         implicit: bytes = b"",
         _nonce_for_unit_testing: bytes = b"",
@@ -138,7 +139,7 @@ class ProtocolVersion2(Protocol):
         if _nonce_for_unit_testing:
             nonce = _nonce_for_unit_testing
         else:
-            nonce = secrets.token_bytes(self.nonce_size)
+            nonce = secrets.token_bytes(cls.nonce_size)
 
         nonce = pysodium.crypto_generichash(
             data,
@@ -150,7 +151,7 @@ class ProtocolVersion2(Protocol):
             message=data,
             ad=pre_auth_encode(header, nonce, footer),
             nonce=nonce,
-            key=key,
+            key=key.key,
         )
 
         return str(
