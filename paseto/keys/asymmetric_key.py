@@ -61,7 +61,8 @@ class AsymmetricSecretKey:
     def generate(cls, protocol: Optional[Protocol] = None):
         protocol = protocol if protocol else ProtocolVersion4
         if protocol is ProtocolVersion3:
-            pass
+            key_obj = ECC.generate(curve="NIST P-384")
+            return cls(key_material=key_obj.export_key(format="PEM"), protocol=protocol)
         return cls(
             key_material=pysodium.crypto_sign_keypair()[1],
             protocol=protocol,
@@ -84,9 +85,12 @@ class AsymmetricSecretKey:
 
     def get_public_key(self):
         if self.protocol is ProtocolVersion3:
-            ecc_key = ECC.import_key(key.key)
-            pk = ecc_key.public_key()
-            return AsymmetricPublicKey(key_material=pk, protocol=self.protocol)
+            if len(self.key) == 48:
+                raise Exception("something is broken")
+            else:
+                ecc_key = ECC.import_key(self.key)
+                pk = ecc_key.public_key().export_key(format="PEM")
+                return AsymmetricPublicKey(key_material=pk, protocol=self.protocol)
         else:
             return AsymmetricPublicKey(
                 key_material=pysodium.crypto_sign_sk_to_pk(sk=self.key),

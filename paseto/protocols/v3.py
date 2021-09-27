@@ -4,6 +4,7 @@ from paseto.helpers import (
     b64decode,
     b64encode,
     validate_and_remove_footer,
+    PasetoMessage,
 )
 from paseto.exceptions import *
 from .protocol import Protocol
@@ -14,6 +15,7 @@ from Cryptodome.Cipher import AES
 from Cryptodome.Util.Padding import unpad
 import hmac
 from typing import Optional
+import secrets
 
 
 class ProtocolVersion3(Protocol):
@@ -39,7 +41,7 @@ class ProtocolVersion3(Protocol):
         return SymmetricKey.generate(protocol=cls)
 
     @classmethod
-    def encrypt(cls, data, key, footer: str = "", implicit: str = ""):
+    def encrypt(cls, data, key, footer: str = b"", implicit: str = b""):
         return cls._encrypt(data=data, key=key, footer=footer, implicit=implicit)
 
     @classmethod
@@ -47,8 +49,8 @@ class ProtocolVersion3(Protocol):
         cls,
         data,
         key,
-        footer: str = "",
-        implicit: str = "",
+        footer: bytes = b"",
+        implicit: bytes = b"",
         _nonce_for_unit_testing=None,
     ):
         if key.protocol is not cls:
@@ -57,7 +59,7 @@ class ProtocolVersion3(Protocol):
             )
 
         return cls.aead_encrypt(
-            data=data,
+            plaintext=data,
             header=cls.header + b".local.",
             key=key,
             footer=footer,
@@ -147,14 +149,14 @@ class ProtocolVersion3(Protocol):
         plaintext,
         header,
         key,
-        footer: str = "",
-        implicit="",
-        _nonce_for_unit_testing="",
+        footer: str = b"",
+        implicit=b"",
+        _nonce_for_unit_testing=b"",
     ):
         if _nonce_for_unit_testing:
             nonce = _nonce_for_unit_testing
         else:
-            nonce = secrets.token_bytes(self.nonce_size)
+            nonce = secrets.token_bytes(cls.nonce_size)
 
         enc_key, auth_key, nonce2 = key.splitV3(nonce)
         cipher = AES.new(enc_key, cls.cipher_mode, nonce=nonce2)
