@@ -5,6 +5,7 @@ from paseto.protocols.v2 import ProtocolVersion2
 import secrets
 from Cryptodome.Protocol.KDF import HKDF
 from Cryptodome.Hash import SHA384
+import pysodium
 
 
 class SymmetricKey:
@@ -47,9 +48,15 @@ class SymmetricKey:
     def splitV3(self, salt: bytes = None) -> list:
         tmp = HKDF(self.key, 48, self.INFO_ENCRYPTION + salt, SHA384, 1)
         enc_key = tmp[:32]
-        nonce = tmp[33:]
+        nonce = tmp[32:]
         auth_key = HKDF(self.key, 48, self.INFO_AUTHENTICATION + salt, SHA384, 1)
         return enc_key, auth_key, nonce
 
     def splitV4(self, salt: bytes = None) -> list:
-        pass
+        tmp = pysodium.crypto_generichash(self.INFO_ENCRYPTION + salt, self.key, 56)
+        enc_key = tmp[:32]
+        nonce = tmp[32:]
+        auth_key = pysodium.crypto_generichash(
+            self.INFO_AUTHENTICATION + salt, self.key
+        )
+        return enc_key, auth_key, nonce

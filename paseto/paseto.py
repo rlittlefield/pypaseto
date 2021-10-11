@@ -126,7 +126,7 @@ def parse(
     if not key:
         raise ValueError("key is required")
 
-    if isinstance(key, AsymmetricSecretKey):
+    if isinstance(key, AsymmetricSecretKey) or isinstance(key, AsymmetricPublicKey):
         if purpose and purpose != "public":
             raise InvalidPurposeException("purpose does not match provided key")
         purpose = "public"
@@ -141,11 +141,11 @@ def parse(
         result = key.protocol.decrypt(data=token, key=key)
     else:
         result = key.protocol.verify(sign_msg=token, key=key)
-    decoded_message = encoder.loads(result)
+    decoded_message = _encoder.loads(result)
     footer = _extract_footer_unsafe(
         token
     )  # this should only be called after the verify/decrypt succeeds
-    decoded_footer = encoder.loads(footer) if footer else None
+    decoded_footer = _encoder.loads(footer) if footer else None
 
     if required_claims:
         missing_claims = set(required_claims).difference(set(decoded_message.keys()))

@@ -74,15 +74,16 @@ def _extract_footer_unsafe(token):
     :param token:
     :return:
     """
+    token = token.encode()
+    parts = token.split(b".")
+    if len(parts) > 3:
+        return b64decode(parts[-1])
+    return b""
+
+
+def remove_footer(token):
     parts = token.split(".")
     if len(parts) > 3:
-        return b64decode(parts[-1]).encode()
-    return ""
-
-
-def _remove_footer(token):
-    parts = token.split(".")
-    if len(parts) < 3:
         return ".".join(parts[:-1])
     return token
 

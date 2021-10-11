@@ -15,6 +15,10 @@ from Cryptodome.Cipher import AES
 from Cryptodome.Util.Padding import unpad
 import hmac
 from paseto.exceptions import *
+from Cryptodome.Util.py3compat import bchr
+
+
+DER_PREFIX = b"""0F0\x10\x06\x07*\x86H\xce=\x02\x01\x06\x05+\x81\x04\x00"\x032\x00"""
 
 
 class AsymmetricSecretKey:
@@ -85,12 +89,11 @@ class AsymmetricSecretKey:
 
     def get_public_key(self):
         if self.protocol is ProtocolVersion3:
-            if len(self.key) == 48:
-                raise Exception("something is broken")
-            else:
-                ecc_key = ECC.import_key(self.key)
-                pk = ecc_key.public_key().export_key(format="PEM")
-                return AsymmetricPublicKey(key_material=pk, protocol=self.protocol)
+            ecc_key = ECC.import_key(self.key)
+            pk = ecc_key.public_key()
+            der = pk.export_key(format="DER", compress=True)
+            public_key = der[23:]
+            return AsymmetricPublicKey(key_material=public_key, protocol=self.protocol)
         else:
             return AsymmetricPublicKey(
                 key_material=pysodium.crypto_sign_sk_to_pk(sk=self.key),
@@ -112,13 +115,6 @@ class AsymmetricPublicKey:
             elif key_length != pysodium.crypto_sign_PUBLICKEYBYTES:
                 raise PasetoException(
                     "Secret keys must be 32 or 64 bytes long;" + key_length + " given"
-                )
-        elif secrets.compare_digest(protocol.header, ProtocolVersion3.header):
-            if key_length == 98:
-                key_material = ProtocolVersion3.get_public_key_pem(key_material)
-            elif key_length == 49:
-                key_material = ProtocolVersion3.get_public_key_pem(
-                    binascii.hexlify(key_material)
                 )
 
         self.key = key_material
@@ -142,27 +138,15 @@ class AsymmetricPublicKey:
                 binascii.unhexlify(ProtovolVersion3.get_public_key_compressed(self.key))
             )
 
+    def get_public_key(self):
+        return self
+
     @classmethod
     def from_encoded_string(cls, encoded, protocol: Optional[Protocol] = None):
         if not protocol:
             protocol = ProtocolVersion4
-        if protocol is ProtocolVersion3:
-            decode_string = b64decode(encoded)
-            decode_length = len(encoded)
-            if decode_length == 98:
-                decoded = ProtocolVersion3.get_public_key_pem(decode_string)
-            elif decode_length == 49:
-                decoded = ProtocolVersion3.get_public_key_pem(
-                    binascii.hexlify(decode_string)
-                )
-            else:
-                deocded = decode_string
+        decoded = b64decode(encoded)
         return cls(key_material=decoded, protocol=protocol)
 
     def to_hex_string(self):
-        if protocol is ProtocolVersion3:
-            if len(self.key) == 98:
-                return self.key
-            if len(self.key) == 49:
-                return ProtocolVersion3.get_public_key_compressed(self.key)
         return binascii.hexlify(self.key)

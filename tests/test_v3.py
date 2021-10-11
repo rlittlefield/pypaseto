@@ -28,3 +28,25 @@ def test_create_local():
         footer="hello",
     )
     assert token is not None
+    assert token.startswith("v3.")
+
+    parsed = paseto.parse(test_v3_local_key, token)
+    assert parsed
+
+
+def test_create_public():
+    test_v3_public_secret_key = ProtocolVersion3.generate_asymmetric_secret_key()
+    test_v3_public_public_key = test_v3_public_secret_key.get_public_key()
+
+    token = paseto.create(
+        key=test_v3_public_secret_key,
+        claims={"test": [1, 2, 3]},
+        purpose="public",
+        exp_seconds=100,
+        footer="hello",
+    )
+    assert token is not None
+
+    assert token.startswith("v3.")
+    parsed = paseto.parse(key=test_v3_public_public_key, token=token)
+    assert parsed

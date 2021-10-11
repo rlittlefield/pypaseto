@@ -5,6 +5,8 @@ from paseto.helpers import (
     b64encode,
     validate_and_remove_footer,
     PasetoMessage,
+    _extract_footer_unsafe,
+    remove_footer,
 )
 from paseto.exceptions import *
 from .protocol import Protocol
@@ -16,6 +18,9 @@ from Cryptodome.Util.Padding import unpad
 import hmac
 from typing import Optional
 import secrets
+from Cryptodome.Hash import SHA384
+
+DER_PREFIX = b"""0F0\x10\x06\x07*\x86H\xce=\x02\x01\x06\x05+\x81\x04\x00"\x032\x00"""
 
 
 class ProtocolVersion3(Protocol):
@@ -68,19 +73,20 @@ class ProtocolVersion3(Protocol):
         )
 
     @classmethod
-    def decrypt(cls, data, key, footer: Optional[str] = None, implicit: str = ""):
+    def decrypt(cls, data, key, footer: Optional[bytes] = None, implicit: bytes = b""):
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
             )
 
         if footer is None:
-            data, footer = extract_footer(data)
+            footer = _extract_footer_unsafe(data)
+            data = remove_footer(data)
         else:
             data = validate_and_remove_footer(data, footer)
 
         return cls.aead_decrypt(
-            data=data,
+            message=data,
             header=cls.header + b".local.",
             key=key,
             footer=footer,
@@ -88,7 +94,7 @@ class ProtocolVersion3(Protocol):
         )
 
     @classmethod
-    def sign(cls, data: str, key, footer: str = "", implicit=""):
+    def sign(cls, data: bytes, key, footer: bytes = b"", implicit: bytes = b""):
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
@@ -97,11 +103,17 @@ class ProtocolVersion3(Protocol):
         header = cls.header + b".public."
         ecc_key = ECC.import_key(key.key)
         signer = DSS.new(key=ecc_key, mode="deterministic-rfc6979", encoding="binary")
-        pubkey = key.get_public_key()
-        if len(pubkey.key) != 49:
-            raise PasetoException("Invalid public key length")
-
-        signature = signer.sign(pre_auth_encode(pubkey, header, data, footer, implicit))
+        verifier = DSS.new(
+            key=ecc_key.public_key(), mode="deterministic-rfc6979", encoding="binary"
+        )
+        pubkey = key.get_public_key().key
+        hash_obj = SHA384.new(pre_auth_encode(pubkey, header, data, footer, implicit))
+        signature = signer.sign(hash_obj)
+        hash_obj = SHA384.new(pre_auth_encode(pubkey, header, data, footer, implicit))
+        valid = verifier.verify(
+            hash_obj,
+            signature,
+        )
         if len(signature) != 96:
             raise PasetoException("Invalid signature length")
         return str(
@@ -109,20 +121,19 @@ class ProtocolVersion3(Protocol):
         )
 
     @classmethod
-    def verify(cls, sign_msg: str, key, footer: Optional[str] = None, implicit=""):
+    def verify(cls, sign_msg: str, key, footer: Optional[bytes] = None, implicit=b""):
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
             )
         if footer is None:
-            footer = extract_footer(sign_msg)
+            footer = _extract_footer_unsafe(sign_msg)
         else:
             sign_msg = validate_and_remove_footer(sign_msg)
 
-        sign_msg = remove_footer(sign_msg)
-
-        expect_header = cls.header + ".public."
-        header_length = len(expect_header)
+        sign_msg = remove_footer(sign_msg).encode()
+        expected_header = cls.header + b".public."
+        header_length = len(expected_header)
         given_header = sign_msg[:header_length]
         if not secrets.compare_digest(expected_header, given_header):
             raise PasetoException("Invalid message header.")
@@ -130,17 +141,23 @@ class ProtocolVersion3(Protocol):
         decoded_len = len(decoded)
         message = decoded[: decoded_len - cls.sign_size]
         signature = decoded[decoded_len - cls.sign_size :]
-        ecc_key = ECC.import_key(key.key)
         pubkey = key.get_public_key()
         if len(pubkey.key) != 49:
             raise PasetoException("Invalid public key length")
-        verifier = DSS.new(pubkey, mode="deterministic-rfc6979", encoding="binary")
+        ecc_key = ECC.import_key(DER_PREFIX + pubkey.key)
+        # ecc_key = ECC.import_key(key.key)
+        verifier = DSS.new(key=ecc_key, mode="deterministic-rfc6979", encoding="binary")
+        hash_obj = SHA384.new(
+            pre_auth_encode(pubkey.key, given_header, message, footer, implicit)
+        )
         try:
-            valid = verifier.verify(sha384(sign_msg), signature)
-            if valid:
-                return message
-        except ValueError:
-            raise PasetoValidationError("Invalid signature for this message")
+            verifier.verify(
+                hash_obj,
+                signature,
+            )
+            return message
+        except ValueError as e:
+            raise PasetoValidationError("Invalid signature for this message") from e
         raise PasetoValidationError("Invalid signature for this message")
 
     @classmethod
@@ -159,7 +176,7 @@ class ProtocolVersion3(Protocol):
             nonce = secrets.token_bytes(cls.nonce_size)
 
         enc_key, auth_key, nonce2 = key.splitV3(nonce)
-        cipher = AES.new(enc_key, cls.cipher_mode, nonce=nonce2)
+        cipher = AES.new(enc_key, cls.cipher_mode, initial_value=nonce2, nonce=b"")
         ciphertext = cipher.encrypt(plaintext)
         if not ciphertext:
             raise PasetoException("Encryption failed.")
@@ -174,32 +191,31 @@ class ProtocolVersion3(Protocol):
         )
 
     @classmethod
-    def aead_decrypt(cls, message, header, key, footer="", implicit=""):
+    def aead_decrypt(cls, message, header, key, footer=b"", implicit=b""):
+        message = message.encode()
         expected_len = len(header)
         given_header = message[:expected_len]
         if not secrets.compare_digest(header, given_header):
             raise PasetoException("Invalid message header.")
 
         try:
-            decoded = b64decode(data[expected_len:])
+            decoded = b64decode(message[expected_len:])
         except:
             raise PasetoException("Invalid encoding detected")
 
         decoded_len = len(decoded)
-        nonce = decoded[: self.nonce_size]
-        ciphertext = decoded[
-            self.nonce_size : decoded_len - (self.nonce_size + self.mac_size)
-        ]
-        mac = decoded[-self.mac_size :]
+        nonce = decoded[: cls.nonce_size]
+        ciphertext = decoded[cls.nonce_size : -cls.mac_size]
+        mac = decoded[-cls.mac_size :]
         enc_key, auth_key, nonce2 = key.splitV3(nonce)
         calc = hmac.new(
             pre_auth_encode(header, nonce, ciphertext, footer, implicit),
             digestmod=cls.hash_algorithm,
-        )
+        ).digest()
         if not secrets.compare_digest(calc, mac):
             raise PasetoException("Invalid MAC for given ciphertext.")
 
-        cipher = AES.new(enc_key, cls.cipher_mode, nonce=nonce2)
+        cipher = AES.new(enc_key, cls.cipher_mode, initial_value=nonce2, nonce=b"")
         try:
             plaintext = cipher.decrypt(ciphertext)
             return plaintext

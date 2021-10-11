@@ -9,7 +9,7 @@ license = "MIT"
 python = "^3.7"
 pendulum = "^2.1.2"
 pyseto = "^0.6.1"
-pysodium = "^0.7.9"
+pysodium = "^0.7.10"
 pycryptodomex = "^3.10.1"
 
 [tool.poetry.dev-dependencies]
