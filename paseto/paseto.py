@@ -85,7 +85,7 @@ def create(
         token = key.protocol.encrypt(data=encoded, key=key, footer=encoded_footer)
     elif purpose == "public":
         token = key.protocol.sign(data=encoded, key=key, footer=encoded_footer)
-    return token
+    return token.decode()
 
 
 def parse(
@@ -122,6 +122,9 @@ def parse(
     :param required_claims: list of claim names that must be present (like exp)
     :return:
     """
+
+    if isinstance(token, str):
+        token = token.encode()
 
     if not key:
         raise ValueError("key is required")

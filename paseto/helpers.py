@@ -44,6 +44,12 @@ class PasetoMessage:
             return message.decode()
         return (message + b"." + b64encode(self.footer)).decode()
 
+    def __bytes__(self):
+        message = self.header + b64encode(self.payload)
+        if self.footer == "":
+            return message
+        return message + b"." + b64encode(self.footer)
+
 
 def _extract_footer_unsafe(token):
     """
@@ -74,7 +80,8 @@ def _extract_footer_unsafe(token):
     :param token:
     :return:
     """
-    token = token.encode()
+    if isinstance(token, str):
+        token = token.encode()
     parts = token.split(b".")
     if len(parts) > 3:
         return b64decode(parts[-1])
@@ -82,9 +89,9 @@ def _extract_footer_unsafe(token):
 
 
 def remove_footer(token):
-    parts = token.split(".")
+    parts = token.split(b".")
     if len(parts) > 3:
-        return ".".join(parts[:-1])
+        return b".".join(parts[:-1])
     return token
 
 
@@ -94,6 +101,6 @@ def validate_and_remove_footer(payload, footer):
     footer = b64encode(footer)
     footer_len = len(footer)
     trailing = payload[-footer_len:]
-    if not secrets.compare_digest("." + footer, trailing):
+    if not secrets.compare_digest(b"." + footer, trailing):
         raise PasetoException("Invalid message footer")
     return payload[:-footer_len]

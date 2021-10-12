@@ -42,7 +42,7 @@ class ProtocolVersion4(Protocol):
     @classmethod
     def _encrypt(cls, data, key, footer=b"", implicit=b"", _nonce_for_unit_testing=b""):
         if key.protocol is not cls:
-            raise PasetoException(
+            raise InvalidVersionException(
                 "The given key is not intended for this version of PASETO."
             )
         return cls.aead_encrypt(
@@ -57,7 +57,7 @@ class ProtocolVersion4(Protocol):
     @classmethod
     def decrypt(cls, data, key, footer: Optional[bytes] = None, implicit: bytes = b""):
         if key.protocol is not cls:
-            raise PasetoException(
+            raise InvalidVersionException(
                 "The given key is not intended for this version of PASETO."
             )
 
@@ -98,7 +98,7 @@ class ProtocolVersion4(Protocol):
             pre_auth_encode(header, nonce, ciphertext, footer, implicit), auth_key
         )
 
-        return str(
+        return bytes(
             PasetoMessage(
                 header=header, payload=nonce + ciphertext + mac, footer=footer
             )
@@ -106,7 +106,6 @@ class ProtocolVersion4(Protocol):
 
     @classmethod
     def aead_decrypt(cls, message, header, key, footer="", implicit=""):
-        message = message.encode()
         expected_len = len(header)
         given_header = message[:expected_len]
         if not secrets.compare_digest(header, given_header):
@@ -134,7 +133,7 @@ class ProtocolVersion4(Protocol):
         return plaintext
 
     @classmethod
-    def sign(cls, data: str, key, footer: bytes = b"", implicit: bytes = b""):
+    def sign(cls, data: bytes, key, footer: bytes = b"", implicit: bytes = b""):
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
@@ -146,13 +145,13 @@ class ProtocolVersion4(Protocol):
             pre_auth_encode(header, data, footer, implicit), key.key
         )
 
-        return str(
+        return bytes(
             PasetoMessage(header=header, payload=data + signature, footer=footer)
         )
 
     @classmethod
     def verify(
-        cls, sign_msg: str, key, footer: Optional[bytes] = None, implicit: bytes = b""
+        cls, sign_msg: bytes, key, footer: Optional[bytes] = None, implicit: bytes = b""
     ):
 
         if key.protocol is not cls:
@@ -162,11 +161,9 @@ class ProtocolVersion4(Protocol):
         if footer is None:
             footer = _extract_footer_unsafe(sign_msg)
             sign_msg = remove_footer(sign_msg)
-            sign_msg = sign_msg.encode()
         else:
             sign_msg = validate_and_remove_footer(sign_msg)
             sign_msg = remove_footer(sign_msg)
-            sign_msg = sign_msg.encode()
 
         expected_header = cls.header + b".public."
         header_length = len(expected_header)

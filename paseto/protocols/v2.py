@@ -39,7 +39,7 @@ class ProtocolVersion2(Protocol):
         cls, data: bytes, key, footer="", implicit="", _nonce_for_unit_testing=""
     ):
         if key.protocol is not cls:
-            raise PasetoException(
+            raise InvalidVersionException(
                 "The given key is not intended for this version of PASETO."
             )
 
@@ -61,7 +61,7 @@ class ProtocolVersion2(Protocol):
         implicit: bytes = "",
     ):
         if key.protocol is not cls:
-            raise PasetoException(
+            raise InvalidVersionException(
                 "The given key is not intended for this version of PASETO."
             )
 
@@ -91,7 +91,7 @@ class ProtocolVersion2(Protocol):
             pre_auth_encode(header, data, footer), key.key
         )
 
-        return str(
+        return bytes(
             PasetoMessage(header=header, payload=data + signature, footer=footer)
         )
 
@@ -154,7 +154,7 @@ class ProtocolVersion2(Protocol):
             key=key.key,
         )
 
-        return str(
+        return bytes(
             PasetoMessage(header=header, payload=nonce + ciphertext, footer=footer)
         )
 

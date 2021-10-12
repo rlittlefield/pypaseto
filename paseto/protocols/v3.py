@@ -59,7 +59,7 @@ class ProtocolVersion3(Protocol):
         _nonce_for_unit_testing=None,
     ):
         if key.protocol is not cls:
-            raise PasetoException(
+            raise InvalidVersionException(
                 "The given key is not intended for this version of PASETO."
             )
 
@@ -75,7 +75,7 @@ class ProtocolVersion3(Protocol):
     @classmethod
     def decrypt(cls, data, key, footer: Optional[bytes] = None, implicit: bytes = b""):
         if key.protocol is not cls:
-            raise PasetoException(
+            raise InvalidVersionException(
                 "The given key is not intended for this version of PASETO."
             )
 
@@ -109,14 +109,9 @@ class ProtocolVersion3(Protocol):
         pubkey = key.get_public_key().key
         hash_obj = SHA384.new(pre_auth_encode(pubkey, header, data, footer, implicit))
         signature = signer.sign(hash_obj)
-        hash_obj = SHA384.new(pre_auth_encode(pubkey, header, data, footer, implicit))
-        valid = verifier.verify(
-            hash_obj,
-            signature,
-        )
         if len(signature) != 96:
             raise PasetoException("Invalid signature length")
-        return str(
+        return bytes(
             PasetoMessage(header=header, payload=data + signature, footer=footer)
         )
 
@@ -131,7 +126,7 @@ class ProtocolVersion3(Protocol):
         else:
             sign_msg = validate_and_remove_footer(sign_msg)
 
-        sign_msg = remove_footer(sign_msg).encode()
+        sign_msg = remove_footer(sign_msg)
         expected_header = cls.header + b".public."
         header_length = len(expected_header)
         given_header = sign_msg[:header_length]
@@ -184,7 +179,7 @@ class ProtocolVersion3(Protocol):
             pre_auth_encode(header, nonce, ciphertext, footer, implicit),
             digestmod=cls.hash_algorithm,
         ).digest()
-        return str(
+        return bytes(
             PasetoMessage(
                 header=header, payload=nonce + ciphertext + mac, footer=footer
             )
@@ -192,7 +187,6 @@ class ProtocolVersion3(Protocol):
 
     @classmethod
     def aead_decrypt(cls, message, header, key, footer=b"", implicit=b""):
-        message = message.encode()
         expected_len = len(header)
         given_header = message[:expected_len]
         if not secrets.compare_digest(header, given_header):
