@@ -78,6 +78,10 @@ class ProtocolVersion3(Protocol):
             raise InvalidVersionException(
                 "The given key is not intended for this version of PASETO."
             )
+        if key.key_type != "local":
+            raise InvalidPurposeException(
+                "The given key is not intended for this purpose."
+            )
 
         if footer is None:
             footer = _extract_footer_unsafe(data)

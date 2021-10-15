@@ -9,6 +9,8 @@ import pysodium
 
 
 class SymmetricKey:
+    key_type = "local"
+
     INFO_ENCRYPTION = b"paseto-encryption-key"
     INFO_AUTHENTICATION = b"paseto-auth-key-for-aead"
 

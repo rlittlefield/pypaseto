@@ -22,6 +22,8 @@ DER_PREFIX = b"""0F0\x10\x06\x07*\x86H\xce=\x02\x01\x06\x05+\x81\x04\x00"\x032\x
 
 
 class AsymmetricSecretKey:
+    key_type = "public_sk"
+
     def __init__(self, key_material: bytes, protocol: Protocol):
         if not protocol:
             protocol = ProtocolVersion4
@@ -102,6 +104,8 @@ class AsymmetricSecretKey:
 
 
 class AsymmetricPublicKey:
+    key_type = "public_pk"
+
     def __init__(self, key_material: bytes, protocol: Optional[Protocol] = None):
         if not protocol:
             protocol = ProtocolVersion4
