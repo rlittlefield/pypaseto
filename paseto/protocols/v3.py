@@ -180,7 +180,8 @@ class ProtocolVersion3(Protocol):
         if not ciphertext:
             raise PasetoException("Encryption failed.")
         mac = hmac.new(
-            pre_auth_encode(header, nonce, ciphertext, footer, implicit),
+            key=auth_key,
+            msg=pre_auth_encode(header, nonce, ciphertext, footer, implicit),
             digestmod=cls.hash_algorithm,
         ).digest()
         return bytes(
@@ -207,7 +208,8 @@ class ProtocolVersion3(Protocol):
         mac = decoded[-cls.mac_size :]
         enc_key, auth_key, nonce2 = key.splitV3(nonce)
         calc = hmac.new(
-            pre_auth_encode(header, nonce, ciphertext, footer, implicit),
+            key=auth_key,
+            msg=pre_auth_encode(header, nonce, ciphertext, footer, implicit),
             digestmod=cls.hash_algorithm,
         ).digest()
         if not secrets.compare_digest(calc, mac):

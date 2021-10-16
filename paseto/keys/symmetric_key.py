@@ -48,10 +48,24 @@ class SymmetricKey:
         pass
 
     def splitV3(self, salt: bytes = None) -> list:
-        tmp = HKDF(self.key, 48, self.INFO_ENCRYPTION + salt, SHA384, 1)
+        tmp = HKDF(
+            master=self.key,
+            key_len=48,
+            context=self.INFO_ENCRYPTION + salt,
+            hashmod=SHA384,
+            num_keys=1,
+            salt=b"",
+        )
         enc_key = tmp[:32]
         nonce = tmp[32:]
-        auth_key = HKDF(self.key, 48, self.INFO_AUTHENTICATION + salt, SHA384, 1)
+        auth_key = HKDF(
+            master=self.key,
+            key_len=48,
+            context=self.INFO_AUTHENTICATION + salt,
+            hashmod=SHA384,
+            num_keys=1,
+            salt=b"",
+        )
         return enc_key, auth_key, nonce
 
     def splitV4(self, salt: bytes = None) -> list:
