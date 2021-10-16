@@ -4,6 +4,7 @@ from paseto.helpers import (
     b64decode,
     b64encode,
     validate_and_remove_footer,
+    remove_footer,
     PasetoMessage,
 )
 from paseto.exceptions import *
@@ -16,6 +17,7 @@ class ProtocolVersion2(Protocol):
     symmetric_key_byte_length = 32
     nonce_size = pysodium.crypto_aead_xchacha20poly1305_ietf_NONCEBYTES
     mac_size = 32
+    sign_size = 64
     header = b"v2"
 
     @classmethod
@@ -75,7 +77,7 @@ class ProtocolVersion2(Protocol):
             data = validate_and_remove_footer(data, footer)
 
         return cls.aead_decrypt(
-            data=data,
+            message=data,
             header=cls.header + b".local.",
             key=key,
             footer=footer,
@@ -108,14 +110,14 @@ class ProtocolVersion2(Protocol):
         if footer is None:
             footer = extract_footer(sign_msg)
         else:
-            sign_msg = validate_and_remove_footer(sign_msg)
+            sign_msg = validate_and_remove_footer(sign_msg, footer)
 
         sign_msg = remove_footer(sign_msg)
 
         expect_header = cls.header + b".public."
         header_length = len(expect_header)
         given_header = sign_msg[:header_length]
-        if not secrets.compare_digest(expected_header, given_header):
+        if not secrets.compare_digest(expect_header, given_header):
             raise PasetoException("Invalid message header.")
 
         decoded = b64decode(sign_msg[header_length:])
@@ -123,12 +125,13 @@ class ProtocolVersion2(Protocol):
         message = decoded[: decoded_len - cls.sign_size]
         signature = decoded[decoded_len - cls.sign_size :]
 
-        valid = pysodium.crypto_sign_verify_detached(
-            signature, pre_auth_encode(given_header, message, footer), key.key
-        )
-        if valid:
+        try:
+            pysodium.crypto_sign_verify_detached(
+                signature, pre_auth_encode(given_header, message, footer), key.key
+            )
             return message
-        return PasetoException("Invalid signature for this message")
+        except:
+            raise PasetoException("Invalid signature for this message")
 
     @classmethod
     def aead_encrypt(
@@ -170,7 +173,7 @@ class ProtocolVersion2(Protocol):
             raise PasetoException("Invalid message header.")
 
         try:
-            decoded = b64decode(data[expected_len:])
+            decoded = b64decode(message[expected_len:])
         except:
             raise PasetoException("Invalid encoding detected")
 
@@ -180,6 +183,6 @@ class ProtocolVersion2(Protocol):
             ciphertext=ciphertext,
             ad=pre_auth_encode(header, nonce, footer),
             nonce=nonce,
-            key=key,
+            key=key.key,
         )
         return plaintext

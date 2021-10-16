@@ -128,7 +128,7 @@ class ProtocolVersion3(Protocol):
         if footer is None:
             footer = _extract_footer_unsafe(sign_msg)
         else:
-            sign_msg = validate_and_remove_footer(sign_msg)
+            sign_msg = validate_and_remove_footer(sign_msg, footer)
 
         sign_msg = remove_footer(sign_msg)
         expected_header = cls.header + b".public."

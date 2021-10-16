@@ -40,13 +40,13 @@ class PasetoMessage:
 
     def __str__(self):
         message = self.header + b64encode(self.payload)
-        if self.footer == "":
+        if self.footer == b"":
             return message.decode()
         return (message + b"." + b64encode(self.footer)).decode()
 
     def __bytes__(self):
         message = self.header + b64encode(self.payload)
-        if self.footer == "":
+        if self.footer == b"":
             return message
         return message + b"." + b64encode(self.footer)
 
@@ -95,12 +95,12 @@ def remove_footer(token):
     return token
 
 
-def validate_and_remove_footer(payload, footer):
+def validate_and_remove_footer(payload, footer=b""):
     if not footer:
         return payload
     footer = b64encode(footer)
     footer_len = len(footer)
-    trailing = payload[-footer_len:]
+    trailing = payload[-footer_len - 1 :]
     if not secrets.compare_digest(b"." + footer, trailing):
         raise PasetoException("Invalid message footer")
-    return payload[:-footer_len]
+    return payload[: -footer_len - 1]
