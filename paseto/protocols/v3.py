@@ -46,7 +46,7 @@ class ProtocolVersion3(Protocol):
         return SymmetricKey.generate(protocol=cls)
 
     @classmethod
-    def encrypt(cls, data, key, footer: str = b"", implicit: str = b""):
+    def encrypt(cls, data, key, footer: bytes = b"", implicit: bytes = b""):
         return cls._encrypt(data=data, key=key, footer=footer, implicit=implicit)
 
     @classmethod
@@ -105,10 +105,13 @@ class ProtocolVersion3(Protocol):
             )
 
         header = cls.header + b".public."
-        ecc_key = ECC.import_key(key.key)
-        signer = DSS.new(key=ecc_key, mode="deterministic-rfc6979", encoding="binary")
+        signer = DSS.new(
+            key=key.ecc_key, mode="deterministic-rfc6979", encoding="binary"
+        )
         verifier = DSS.new(
-            key=ecc_key.public_key(), mode="deterministic-rfc6979", encoding="binary"
+            key=key.ecc_key.public_key(),
+            mode="deterministic-rfc6979",
+            encoding="binary",
         )
         pubkey = key.get_public_key().key
         hash_obj = SHA384.new(pre_auth_encode(pubkey, header, data, footer, implicit))
@@ -120,7 +123,7 @@ class ProtocolVersion3(Protocol):
         )
 
     @classmethod
-    def verify(cls, sign_msg: str, key, footer: Optional[bytes] = None, implicit=b""):
+    def verify(cls, sign_msg: bytes, key, footer: Optional[bytes] = None, implicit=b""):
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
@@ -144,7 +147,6 @@ class ProtocolVersion3(Protocol):
         if len(pubkey.key) != 49:
             raise PasetoException("Invalid public key length")
         ecc_key = ECC.import_key(DER_PREFIX + pubkey.key)
-        # ecc_key = ECC.import_key(key.key)
         verifier = DSS.new(key=ecc_key, mode="deterministic-rfc6979", encoding="binary")
         hash_obj = SHA384.new(
             pre_auth_encode(pubkey.key, given_header, message, footer, implicit)
@@ -165,7 +167,7 @@ class ProtocolVersion3(Protocol):
         plaintext,
         header,
         key,
-        footer: str = b"",
+        footer: bytes = b"",
         implicit=b"",
         _nonce_for_unit_testing=b"",
     ):

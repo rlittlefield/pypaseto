@@ -16,6 +16,7 @@ from Cryptodome.Util.Padding import unpad
 import hmac
 from paseto.exceptions import *
 from Cryptodome.Util.py3compat import bchr
+from Cryptodome.PublicKey.ECC import EccKey
 
 
 DER_PREFIX = b"""0F0\x10\x06\x07*\x86H\xce=\x02\x01\x06\x05+\x81\x04\x00"\x032\x00"""
@@ -47,6 +48,14 @@ class AsymmetricSecretKey:
                     )
                 keypair = pysodium.crypto_sign_seed_keypair(key_material)
                 key_material = keypair[0]
+        elif secrets.compare_digest(protocol.header, ProtocolVersion3.header):
+            if len(key_material) == 48:
+                self.ecc_key = EccKey(
+                    curve="NIST P-384",
+                    d=int.from_bytes(key_material, byteorder="little"),
+                )
+            else:
+                self.ecc_key = ECC.import_key(encoded=key_material)
 
         self.key = key_material
         self.protocol = protocol
@@ -68,7 +77,10 @@ class AsymmetricSecretKey:
         protocol = protocol if protocol else ProtocolVersion4
         if protocol is ProtocolVersion3:
             key_obj = ECC.generate(curve="NIST P-384")
-            return cls(key_material=key_obj.export_key(format="PEM"), protocol=protocol)
+            return cls(
+                key_material=key_obj.export_key(format="PEM").encode(),
+                protocol=protocol,
+            )
         return cls(
             key_material=pysodium.crypto_sign_keypair()[1],
             protocol=protocol,
@@ -81,18 +93,9 @@ class AsymmetricSecretKey:
     def from_encoded_string(cls, encoded, protocol: Optional[Protocol] = None):
         return cls(key_material=decoded, protocol=protocol)
 
-    def to_hex_string(self):
-        if protocol is ProtocolVersion3:
-            if len(self.key) == 98:
-                return self.key
-            if len(self.key) == 49:
-                return ProtocolVersion3.get_public_key_compressed(self.key)
-        return binascii.hexlify(self.key)
-
     def get_public_key(self):
         if self.protocol is ProtocolVersion3:
-            ecc_key = ECC.import_key(self.key)
-            pk = ecc_key.public_key()
+            pk = self.ecc_key.public_key()
             der = pk.export_key(format="DER", compress=True)
             public_key = der[23:]
             return AsymmetricPublicKey(key_material=public_key, protocol=self.protocol)
@@ -151,6 +154,3 @@ class AsymmetricPublicKey:
             protocol = ProtocolVersion4
         decoded = b64decode(encoded)
         return cls(key_material=decoded, protocol=protocol)
-
-    def to_hex_string(self):
-        return binascii.hexlify(self.key)
