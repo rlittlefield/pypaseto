@@ -19,9 +19,6 @@ from Cryptodome.Util.py3compat import bchr
 from Cryptodome.PublicKey.ECC import EccKey
 
 
-DER_PREFIX = b"""0F0\x10\x06\x07*\x86H\xce=\x02\x01\x06\x05+\x81\x04\x00"\x032\x00"""
-
-
 class AsymmetricSecretKey:
     key_type = "public_sk"
 
