@@ -17,6 +17,8 @@ This is an unofficial implementation of
 Before using, please note that only version 2 is supported by this library! Support for Paseto versions 3 and 4 is coming soon!
 Versions 1 and 2 are expected to be deprecated in the official standard starting in 2022.
 
+View progress on support for paseto versions 3 and 4 on this draft pull request: https://github.com/rlittlefield/pypaseto/pull/19 
+
 Installation
 ------------
 
