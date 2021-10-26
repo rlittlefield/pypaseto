@@ -8,35 +8,26 @@ Platform-Agnostic Security Tokens for Python
    :target: https://pypi.python.org/pypi/paseto
 
 
-.. image:: https://travis-ci.org/rlittlefield/pypaseto.svg?branch=master
-    :target: https://travis-ci.org/rlittlefield/pypaseto
+.. image:: https://github.com/rlittlefield/pypaseto/actions/workflows/main.yml/badge.svg
+    :target: https://github.com/rlittlefield/pypaseto/actions/workflows/main.yml
 
 This is an unofficial implementation of
-`PASETO: Platform-Agnostic Security Tokens <https://github.com/paragonie/paseto>`_ for Python.
+`PASETO: Platform-Agnostic Security Tokens <https://paseto.io/>` for Python.
 
-Before using, please note that only version 2 is supported by this library! Support for Paseto versions 3 and 4 is coming soon!
-Versions 1 and 2 are expected to be deprecated in the official standard starting in 2022.
+PASETO versions supported: v2, v3, and v4
 
-View progress on support for paseto versions 3 and 4 on this draft pull request: https://github.com/rlittlefield/pypaseto/pull/19 
+Please note that the v2 token type standard is expected to be deprecated in 2022, so new development should be done ideally on versions 3 or 4.
 
 Installation
 ------------
 
 .. code-block:: bash
 
-	pip install paseto
+    pip install paseto
 
 
 Usage
 -----
-
-This is still in early development. It has not been reviewed in a security
-audit yet, so please be aware that it is not expected to be ready for use in
-production systems.
-
-It currently only supports basic encrypt/decrypt of the "local" token type, V2.
-V1 is not as nice as V2, but we will accept a functional, clean, secure pull
-request for a V1 if you are interested.
 
 To create/parse paseto tokens, use the create/parse functions. These will
 automatically handle encoding/decoding the JSON payload for you, and validate
@@ -45,51 +36,50 @@ claims (currently just the 'exp' expiration registered claim).
 
 .. code-block:: python
 
-	import paseto
-	import secrets
-	my_key = secrets.token_bytes(32)
-	# > b'M\xd48b\xe2\x9f\x1e\x01[T\xeaA1{Y\xd1y\xfdx\xb5\xb7\xbedi\xa3\x96!`\x88\xc2n\xaf'
+    import paseto
+    from paseto.keys.symmetric_key import SymmetricKey
+    from paseto.protocols.v4 import ProtocolVersion4
+    my_key = SymmetricKey.generate(protocol=ProtocolVersion4)
 
-	# create a paseto token that expires in 5 minutes (300 seconds)
-	token = paseto.create(
-		key=my_key,
-		purpose='local',
-		claims={'my claims': [1, 2, 3]},
-		exp_seconds=300
-	)
-	# > b'v2.local.g7qPkRXfUVSxx3jDw6qbAVDvehtz_mwawYsCd5IQ7VmxuRFIHxY9djMaR8M7LWvCSvCZu8NUk-Ta8zFC5MpUXldBCKq8NtCG31wsoKv8zCKwDs9LuWy4NX3Te6rvlnjDMcI_Iw'
+    # create a paseto token that expires in 5 minutes (300 seconds)
+    token = paseto.create(
+        key=my_key,
+        purpose='local',
+        claims={'my claims': [1, 2, 3]},
+        exp_seconds=300
+    )
 
-	parsed = paseto.parse(
-		key=my_key,
-		purpose='local',
-		token=token,
-	)
-	print(parsed['message'])
+    parsed = paseto.parse(
+        key=my_key,
+        purpose='local',
+        token=token,
+    )
+    print(parsed)
+    # {'message': {'exp': '2021-10-25T22:43:20-06:00', 'my claims': [1, 2, 3]}, 'footer': None}
 
 
-You can also make and verify v2.public tokens, which are signed but not
+You can also make and verify "public" tokens, which are signed but not
 encrypted:
 
 .. code-block:: python
+    import paseto
+    from paseto.keys.asymmetric_key import AsymmetricSecretKey
+    from paseto.protocols.v4 import ProtocolVersion4
+    my_key = AsymmetricSecretKey.generate(protocol=ProtocolVersion4)
 
-	import paseto
-	import pysodium
-	pubkey, privkey = pysodium.crypto_sign_keypair()
-	# pubkey > b'\xa7\x0b\x14\xec\x03\x97\x90\x86\x14\x12\xa0x:)\x97\xed\xdf\x81\xc3\xe4\x95\xd7R\xfe\x9bT\xba,\x92\x0c\xb9P'
-	# privkey > b'@\x1fg\x9b\x83b$\xcdJP{\x93\xe8[\xae\x05.\xe9\xcb\x13\xe7`v\xa67\xd6\xb47\x7f\x96\xdf0\xa7\x0b\x14\xec\x03\x97\x90\x86\x14\x12\xa0x:)\x97\xed\xdf\x81\xc3\xe4\x95\xd7R\xfe\x9bT\xba,\x92\x0c\xb9P'
+    # create a paseto token that expires in 5 minutes (300 seconds)
+    token = paseto.create(
+        key=my_key,
+        purpose='public',
+        claims={'my claims': [1, 2, 3]},
+        exp_seconds=300
+    )
 
-	token = paseto.create(
-		key=privkey,
-		purpose='public',
-		claims={'my claims': [1, 2, 3]},
-		exp_seconds=300
-	)
-	# > b'v2.public.eyJteSBjbGFpbXMiOiBbMSwgMiwgM10sICJleHAiOiAiMjAxOC0wMy0xM1QxNDo0MzozNC0wNjowMCJ9vjeSnGkfEk7tkHg5gj07vFo-YYBMTYEuSG00SqQ6iaYMeLMcc9puiOOUsu0buTziYeEmE9Fahtm1pi2PSPZpDA'
+    parsed = paseto.parse(
+        key=my_key,
+        purpose='public',
+        token=token,
+    )
+    print(parsed)
+    # {'message': {'exp': '2021-10-25T22:43:20-06:00', 'my claims': [1, 2, 3]}, 'footer': None}
 
-	parsed = paseto.parse(
-		key=pubkey,
-		purpose='public',
-		token=token,
-	)
-	# > {'message': {'my claims': [1, 2, 3], 'exp': '2018-03-13T14:43:34-06:00'}, 'footer': None}
-	print(parsed['message'])

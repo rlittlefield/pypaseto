@@ -157,11 +157,11 @@ class ProtocolVersion4(Protocol):
     def verify(
         cls, sign_msg: bytes, key, footer: Optional[bytes] = None, implicit: bytes = b""
     ):
-
         if key.protocol is not cls:
             raise PasetoException(
                 "The given key is not intended for this version of PASETO."
             )
+        key = key.get_public_key()
         if footer is None:
             footer = _extract_footer_unsafe(sign_msg)
             sign_msg = remove_footer(sign_msg)
