@@ -61,6 +61,7 @@ claims (currently just the 'exp' expiration registered claim).
 You can also make and verify "public" tokens, which are signed but not
 encrypted:
 
+
 .. code-block:: python
     import paseto
     from paseto.keys.asymmetric_key import AsymmetricSecretKey
