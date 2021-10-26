@@ -1,7 +1,11 @@
 name: CI
 on:
   push:
-    branches: [ v3-and-v4 ]
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   lint:
@@ -15,17 +19,23 @@ jobs:
           DEFAULT_BRANCH: master
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9, 3.10]
+        poetry-version: [1.0, 1.1.11]
+        os: [ubuntu-18.04, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: ${{ matrix.python-version }}
           architecture: 'x64'
       - name: Install poetry
         uses: abatilo/actions-poetry@v2.1.4
         with:
-          poetry-version: 1.1.11
+          poetry-version: ${{ matrix.poetry-version }}
       - name: install dependencies
         run: |
           poetry install
