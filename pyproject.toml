@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "paseto"
-version = "1.0.0"
+version = "1.0.1"
 description = "Platform-Agnostic Security Tokens for Python (PASETO)"
 authors = ["Ryan Littlefield <ryan@ryanlittlefield.com>"]
 license = "MIT"
