@@ -4,6 +4,13 @@ version = "1.0.0"
 description = "Platform-Agnostic Security Tokens for Python (PASETO)"
 authors = ["Ryan Littlefield <ryan@ryanlittlefield.com>"]
 license = "MIT"
+readme = "README.rst"
+repository = "https://github.com/rlittlefield/pypaseto"
+keywords = ["paseto", "pypaseto", "jwt", "token"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Topic :: Security :: Cryptography"
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"

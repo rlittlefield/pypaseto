@@ -3,3 +3,4 @@ __pycache__/
 .vscode/
 py3env/
 *.code-workspace
+dist/*

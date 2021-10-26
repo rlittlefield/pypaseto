@@ -1,8 +1,0 @@
--i https://pypi.python.org/simple/
-pendulum==1.4.2
-pysodium==0.7.0.post0
-python-dateutil==2.8.1
-pytz==2021.1
-pytzdata==2020.1
-six==1.15.0
-tzlocal==2.1
