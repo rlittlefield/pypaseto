@@ -33,6 +33,12 @@ jobs:
         uses: abatilo/actions-poetry@v2.1.4
         with:
           poetry-version: ${{ matrix.poetry-version }}
+      - name: dependency checks
+        run: |
+          poetry check
+      - uses: pyupio/safety-action@v1
+        with:
+          api-key: ${{ secrets.SAFETY_API_KEY }}
       - name: install dependencies
         run: |
           poetry install
