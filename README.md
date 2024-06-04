@@ -72,3 +72,12 @@ parsed = paseto.parse(
 print(parsed)
 # {'message': {'exp': '2021-10-25T22:43:20-06:00', 'my claims': [1, 2, 3]}, 'footer': None}
 ```
+
+
+Changelog
+---------
+
+### v2.0.0
+* Dropping support for python 3.7
+* Adding support for python 3.11 and 3.12
+* Dependency updates for pendulum, pysodium, pycryptodomex
