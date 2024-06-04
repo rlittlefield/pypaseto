@@ -50,5 +50,36 @@ jobs:
         run: |
           poetry install
           poetry run python -m pytest
-
-
+  release:
+    name: "Build and Release"
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishin
+    environment:
+      name: release
+      url: https://pypi.org/p/paseto
+    needs:
+      - test
+      - safety-check
+      - lint
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.12"
+          architecture: 'x64'
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2.1.4
+        with:
+          poetry-version: "1.8.3"
+      - name: dependency checks
+        run: |
+          poetry check
+      - name: install dependencies
+        run: |
+          poetry install
+      - name: build
+        run: |
+          poetry build
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
