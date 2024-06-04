@@ -15,6 +15,7 @@ jobs:
           VALIDATE_PYTHON_BLACK: true
           DEFAULT_BRANCH: master
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   test:
     strategy:
       fail-fast: false
@@ -39,6 +40,7 @@ jobs:
       - uses: pyupio/safety-action@v1
         with:
           api-key: ${{ secrets.SAFETY_API_KEY }}
+          runs-on: ubuntu-latest
       - name: install dependencies
         run: |
           poetry install
